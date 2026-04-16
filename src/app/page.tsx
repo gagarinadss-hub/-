@@ -30,7 +30,7 @@ export default function Home() {
       {/* ── Floating spheres ────────────────────────────────────────────────── */}
       <div aria-hidden="true" className="pointer-events-none select-none fixed inset-0 overflow-hidden">
         {/* Large violet left */}
-        <div style={{
+        <div className="lp-orb" style={{
           position: 'absolute', width: 320, height: 320,
           top: '-60px', left: '-80px', borderRadius: '50%',
           background: 'radial-gradient(circle at 35% 30%, #c4b5fd, #818cf8 55%, #4338ca 100%)',
@@ -38,7 +38,7 @@ export default function Home() {
           animation: 'lp-orb1 10s ease-in-out infinite',
         }} />
         {/* Medium indigo right */}
-        <div style={{
+        <div className="lp-orb" style={{
           position: 'absolute', width: 220, height: 220,
           top: '15%', right: '-40px', borderRadius: '50%',
           background: 'radial-gradient(circle at 36% 32%, #a5b4fc, #6366f1 60%, #3730a3 100%)',
@@ -46,7 +46,7 @@ export default function Home() {
           animation: 'lp-orb2 13s ease-in-out infinite',
         }} />
         {/* Small sky bottom left */}
-        <div style={{
+        <div className="lp-orb" style={{
           position: 'absolute', width: 140, height: 140,
           bottom: '20%', left: '5%', borderRadius: '50%',
           background: 'radial-gradient(circle at 38% 34%, #bae6fd, #7dd3fc 55%, #0284c7 100%)',
@@ -54,7 +54,7 @@ export default function Home() {
           animation: 'lp-orb3 15s ease-in-out infinite',
         }} />
         {/* Tiny lilac top right */}
-        <div style={{
+        <div className="lp-orb" style={{
           position: 'absolute', width: 90, height: 90,
           top: '8%', right: '18%', borderRadius: '50%',
           background: 'radial-gradient(circle at 38% 32%, #e0e7ff, #c4b5fd 55%, #7c3aed 100%)',
@@ -62,7 +62,7 @@ export default function Home() {
           animation: 'lp-orb2 8s ease-in-out infinite reverse',
         }} />
         {/* Bottom right mint */}
-        <div style={{
+        <div className="lp-orb" style={{
           position: 'absolute', width: 160, height: 160,
           bottom: '-30px', right: '8%', borderRadius: '50%',
           background: 'radial-gradient(circle at 36% 32%, #ddd6fe, #a78bfa 55%, #6d28d9 100%)',
@@ -85,6 +85,18 @@ export default function Home() {
         @keyframes lp-orb3 {
           0%,100% { transform: translate(0,0); }
           50%  { transform: translate(14px,-16px); }
+        }
+        @media (max-width: 767px) {
+          .lp-orb { opacity: 0.30 !important; }
+          .lp-text-block {
+            background: rgba(255,255,255,0.52);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.45);
+            border-radius: 28px;
+            padding: 32px 20px;
+            box-shadow: 0 4px 24px rgba(139,92,246,0.10);
+          }
         }
       `}</style>
 
@@ -122,7 +134,7 @@ export default function Home() {
         <section className="flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full px-6 pt-4 pb-16 relative z-10">
 
           {/* Text block */}
-          <div className="text-center max-w-3xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto lp-text-block">
 
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-8"
               style={{
