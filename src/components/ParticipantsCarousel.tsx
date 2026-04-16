@@ -37,34 +37,33 @@ function CarouselCard({ profile, active }: { profile: Profile; active: boolean }
   return (
     <div
       style={{ width: `${CARD_W}px` }}
-      className={`h-[360px] shrink-0 rounded-3xl p-5 flex flex-col transition-[background,box-shadow] duration-350 select-none ${
+      className={`h-[360px] shrink-0 rounded-3xl p-5 flex flex-col transition-[background,box-shadow] duration-350 select-none overflow-hidden ${
         active
           ? 'glass shadow-[0_24px_64px_rgba(0,0,0,0.15),0_4px_16px_rgba(0,0,0,0.08)]'
           : 'glass-sm shadow-none'
       }`}
     >
       {/* Avatar + identity */}
-      <div className="flex flex-col items-center text-center gap-3 pt-3">
+      <div className="flex flex-col items-center text-center gap-2 pt-2 shrink-0">
         <div className={`rounded-full transition-all duration-350 ${active ? 'ring-2 ring-white/70 ring-offset-2 ring-offset-transparent' : ''}`}>
           <Avatar name={profile.full_name} avatarUrl={profile.avatar_url} size="lg" />
         </div>
-        <div>
-          <h3 className="font-bold text-[17px] text-[var(--text)] leading-tight tracking-tight">
+        <div className="w-full px-1">
+          <h3 className="font-bold text-[17px] text-[var(--text)] leading-tight tracking-tight line-clamp-1">
             {profile.full_name}
           </h3>
           {(profile.profession || profile.city) && (
-            <p className="text-[13px] text-[var(--text-2)] mt-0.5 leading-snug">
-              {profile.profession ?? ''}
-              {profile.city ? ` · ${profile.city}` : ''}
+            <p className="text-[12px] text-[var(--text-2)] mt-0.5 leading-snug line-clamp-1">
+              {[profile.profession, profile.city].filter(Boolean).join(' · ')}
             </p>
           )}
         </div>
       </div>
 
       {/* Snippet */}
-      <div className="flex-1 flex items-center justify-center py-3">
+      <div className="flex-1 flex items-center justify-center py-2 min-h-0">
         {snippet ? (
-          <p className="text-[13px] text-[var(--text-2)] text-center line-clamp-3 leading-relaxed px-1">
+          <p className="text-[13px] text-[var(--text-2)] text-center line-clamp-2 leading-relaxed px-1">
             {snippet}
           </p>
         ) : (
@@ -75,26 +74,30 @@ function CarouselCard({ profile, active }: { profile: Profile; active: boolean }
       </div>
 
       {/* Tags */}
-      {tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 justify-center mb-4">
-          {tags.map((tag) => (
-            <span key={tag} className="rk-tag text-[11px] px-2.5 py-1">{tag}</span>
-          ))}
-        </div>
-      )}
+      <div className="shrink-0 mb-3">
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 justify-center">
+            {tags.slice(0, 3).map((tag) => (
+              <span key={tag} className="rk-tag text-[11px] px-2.5 py-1 line-clamp-1 max-w-[120px]">{tag}</span>
+            ))}
+          </div>
+        )}
+      </div>
 
-      {/* CTA */}
-      <Link
-        href="/matches"
-        tabIndex={active ? 0 : -1}
-        className={`w-full py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all duration-200 ${
-          active
-            ? 'glow-btn'
-            : 'bg-white/20 text-[var(--text-2)] pointer-events-none'
-        }`}
-      >
-        Предложить встречу <ArrowRight size={13} />
-      </Link>
+      {/* CTA — always at bottom */}
+      <div className="shrink-0">
+        <Link
+          href="/matches"
+          tabIndex={active ? 0 : -1}
+          className={`w-full py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all duration-200 ${
+            active
+              ? 'glow-btn'
+              : 'bg-white/20 text-[var(--text-2)] pointer-events-none'
+          }`}
+        >
+          Предложить встречу <ArrowRight size={13} />
+        </Link>
+      </div>
     </div>
   )
 }

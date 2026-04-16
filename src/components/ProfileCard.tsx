@@ -315,7 +315,7 @@ function ExpandedCard({
       {/* Telegram + hint row (when no chatHref) */}
       {!hasActions && (
         <div className="flex items-center flex-wrap gap-2 mt-3">
-          {profile.username && <TelegramLink username={profile.username} />}
+          {profile.username && <TelegramLink username={profile.username} compact />}
           {hint && (
             <span className="inline-flex text-[11px] font-bold text-[var(--text)] bg-[var(--accent)] px-3 py-1.5 rounded-full">
               {hint}
