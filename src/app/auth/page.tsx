@@ -136,7 +136,14 @@ function AuthForm() {
 
   if (mode === 'forgot') {
     return (
-      <div className="glass rounded-3xl p-7 space-y-5">
+      <div className="rounded-3xl p-7 space-y-5"
+        style={{
+          background: 'rgba(255,255,255,0.58)',
+          backdropFilter: 'blur(28px) saturate(1.8)',
+          WebkitBackdropFilter: 'blur(28px) saturate(1.8)',
+          border: '1px solid rgba(255,255,255,0.48)',
+          boxShadow: '0 8px 40px rgba(139,92,246,0.13), 0 2px 8px rgba(0,0,0,0.05), inset 0 1px rgba(255,255,255,0.72)',
+        }}>
         <button
           type="button"
           onClick={() => switchMode('login')}
@@ -216,7 +223,14 @@ function AuthForm() {
   // ── Login / Register view ─────────────────────────────────────────────────────
 
   return (
-    <div className="glass rounded-3xl p-7 space-y-5">
+    <div className="rounded-3xl p-7 space-y-5"
+      style={{
+        background: 'rgba(255,255,255,0.58)',
+        backdropFilter: 'blur(28px) saturate(1.8)',
+        WebkitBackdropFilter: 'blur(28px) saturate(1.8)',
+        border: '1px solid rgba(255,255,255,0.48)',
+        boxShadow: '0 8px 40px rgba(139,92,246,0.13), 0 2px 8px rgba(0,0,0,0.05), inset 0 1px rgba(255,255,255,0.72)',
+      }}>
 
       {searchParams.get('error') && (
         <div className="flex items-start gap-3 p-3 bg-red-500/15 rounded-2xl border border-red-400/30">
@@ -232,21 +246,23 @@ function AuthForm() {
       )}
 
       {/* Mode toggle */}
-      <div className="flex rounded-2xl bg-black/8 p-1">
+      <div className="flex rounded-2xl p-1" style={{ background: 'rgba(167,139,250,0.12)' }}>
         <button type="button" onClick={() => switchMode('login')}
           className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
             mode === 'login'
-              ? 'bg-white/50 shadow text-[var(--text)]'
-              : 'text-[var(--text-2)] hover:text-[var(--text)]'
-          }`}>
+              ? 'bg-white/65 shadow-sm'
+              : 'hover:bg-white/25'
+          }`}
+          style={{ color: mode === 'login' ? '#1e1b4b' : '#6d28d9' }}>
           Войти
         </button>
         <button type="button" onClick={() => switchMode('register')}
           className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${
             mode === 'register'
-              ? 'bg-white/50 shadow text-[var(--text)]'
-              : 'text-[var(--text-2)] hover:text-[var(--text)]'
-          }`}>
+              ? 'bg-white/65 shadow-sm'
+              : 'hover:bg-white/25'
+          }`}
+          style={{ color: mode === 'register' ? '#1e1b4b' : '#6d28d9' }}>
           Зарегистрироваться
         </button>
       </div>
@@ -357,15 +373,82 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
+    <main className="min-h-screen flex items-center justify-center px-4 overflow-hidden relative">
+
+      {/* ── Floating 3D spheres ─────────────────────────────────────────── */}
+      <div aria-hidden="true" className="pointer-events-none select-none">
+        {/* Left top sphere */}
+        <div className="fixed"
+          style={{
+            width: 140, height: 140,
+            top: '12%', left: '-30px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 35% 35%, #c4b5fd, #818cf8 55%, #4c1d95 100%)',
+            boxShadow: '0 20px 60px rgba(139,92,246,0.35), inset -4px -4px 20px rgba(255,255,255,0.18)',
+            animation: 'auth-orb1 9s ease-in-out infinite',
+            zIndex: 0,
+          }} />
+        {/* Right bottom sphere */}
+        <div className="fixed"
+          style={{
+            width: 110, height: 110,
+            bottom: '18%', right: '-18px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 35% 30%, #a5b4fc, #6366f1 60%, #312e81 100%)',
+            boxShadow: '0 16px 48px rgba(99,102,241,0.30), inset -3px -3px 16px rgba(255,255,255,0.15)',
+            animation: 'auth-orb2 11s ease-in-out infinite',
+            zIndex: 0,
+          }} />
+        {/* Small accent sphere */}
+        <div className="fixed"
+          style={{
+            width: 70, height: 70,
+            top: '58%', left: '8%',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 38% 32%, #e0e7ff, #a5b4fc 60%, #6366f1 100%)',
+            boxShadow: '0 8px 28px rgba(99,102,241,0.22), inset -2px -2px 10px rgba(255,255,255,0.20)',
+            animation: 'auth-orb3 13s ease-in-out infinite',
+            zIndex: 0,
+          }} />
+        {/* Top right hint */}
+        <div className="fixed"
+          style={{
+            width: 56, height: 56,
+            top: '8%', right: '10%',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 38% 32%, #ddd6fe, #a78bfa 60%, #7c3aed 100%)',
+            boxShadow: '0 6px 22px rgba(167,139,250,0.28), inset -2px -2px 8px rgba(255,255,255,0.18)',
+            animation: 'auth-orb2 8s ease-in-out infinite reverse',
+            zIndex: 0,
+          }} />
+      </div>
+
+      <style>{`
+        @keyframes auth-orb1 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33% { transform: translate(14px,-22px) scale(1.04); }
+          66% { transform: translate(-8px,16px) scale(0.97); }
+        }
+        @keyframes auth-orb2 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          40% { transform: translate(-18px,14px) scale(1.03); }
+          70% { transform: translate(10px,-10px) scale(0.96); }
+        }
+        @keyframes auth-orb3 {
+          0%,100% { transform: translate(0,0); }
+          50% { transform: translate(12px,-14px); }
+        }
+      `}</style>
+
+      {/* ── Card ──────────────────────────────────────────────────────────── */}
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5 font-black text-[var(--text)] text-xl mb-6">
             <div className="w-9 h-9 rounded-2xl glass flex items-center justify-center text-lg">☕</div>
             Random Coffee
           </Link>
-          <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">Добро пожаловать</h1>
-          <p className="text-[var(--text-2)] mt-1.5 text-sm">Войди или создай аккаунт</p>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#1e1b4b' }}>Добро пожаловать</h1>
+          <p className="mt-1.5 text-sm" style={{ color: '#4c1d95', opacity: 0.72 }}>Войди или создай аккаунт</p>
         </div>
 
         <Suspense fallback={<div className="glass rounded-3xl p-7 animate-pulse h-72" />}>
