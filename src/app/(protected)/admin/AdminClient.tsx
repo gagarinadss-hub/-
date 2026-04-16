@@ -12,8 +12,8 @@ import {
 } from 'lucide-react'
 
 const FORMAT_OPTIONS = [
-  { value: 'online',  label: 'Онлайн',  icon: Wifi,   color: 'text-blue-400 bg-blue-950/30 border-blue-800/40' },
-  { value: 'offline', label: 'Офлайн',  icon: MapPin, color: 'text-green-400 bg-green-950/30 border-green-800/40' },
+  { value: 'online',  label: 'Онлайн',  icon: Wifi,   color: 'text-blue-700 bg-blue-100/80 border-blue-200/60' },
+  { value: 'offline', label: 'Офлайн',  icon: MapPin, color: 'text-green-700 bg-green-100/80 border-green-200/60' },
   { value: 'hybrid',  label: 'Гибрид',  icon: Layers, color: 'text-purple-600 bg-purple-50 border-purple-200' },
 ] as const
 
@@ -54,6 +54,86 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
   const [profiles, setProfiles] = useState(initProfiles)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null)
+
+  // Edit profile modal
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null)
+  const [editForm, setEditForm] = useState<Partial<Profile>>({})
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editSuccess, setEditSuccess] = useState<string | null>(null)
+
+  const GOAL_OPTIONS = [
+    { value: 'нетворк',      label: '🤝 Нетворкинг' },
+    { value: 'партнёрство',  label: '🚀 Партнёрство' },
+    { value: 'менторство',   label: '🧠 Менторство' },
+    { value: 'дружба',       label: '😊 Дружба' },
+    { value: 'инвестиции',   label: '💰 Инвестиции' },
+    { value: 'найм',         label: '👥 Найм / команда' },
+  ]
+
+  function openEditProfile(p: Profile) {
+    setEditingProfile(p)
+    setEditForm({
+      full_name:   p.full_name,
+      username:    p.username   ?? '',
+      city:        p.city       ?? '',
+      profession:  p.profession ?? '',
+      bio:         p.bio        ?? '',
+      goals:       p.goals      ?? '',
+      help_with:   p.help_with  ?? '',
+      interests:   p.interests  ?? [],
+      looking_for: p.looking_for ?? [],
+      is_active:   p.is_active,
+    })
+    setEditError(null)
+    setEditSuccess(null)
+  }
+
+  function closeEditProfile() {
+    setEditingProfile(null)
+    setEditForm({})
+    setEditError(null)
+  }
+
+  async function saveEditProfile() {
+    if (!editingProfile) return
+    setEditLoading(true)
+    setEditError(null)
+
+    const interestsArr = typeof editForm.interests === 'string'
+      ? (editForm.interests as unknown as string).split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean)
+      : (editForm.interests ?? [])
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        full_name:   editForm.full_name,
+        username:    editForm.username   || null,
+        city:        editForm.city       || null,
+        profession:  editForm.profession || null,
+        bio:         editForm.bio        || null,
+        goals:       editForm.goals      || null,
+        help_with:   editForm.help_with  || null,
+        interests:   interestsArr,
+        looking_for: editForm.looking_for ?? [],
+        is_active:   editForm.is_active,
+        updated_at:  new Date().toISOString(),
+      })
+      .eq('id', editingProfile.id)
+      .select()
+      .single()
+
+    setEditLoading(false)
+    if (error) {
+      setEditError(error.message)
+    } else if (data) {
+      setProfiles(prev => prev.map(p => p.id === data.id ? data : p))
+      setEditSuccess('Профиль обновлён')
+      setTimeout(() => { setEditSuccess(null); closeEditProfile() }, 1200)
+    }
+  }
 
   // --- Announcements CRUD ---
   async function saveAnnouncement() {
@@ -128,15 +208,25 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
   // --- Participants ---
   async function deleteParticipant(profile: Profile) {
     setDeletingId(profile.id)
+    setDeleteError(null)
+    setDeleteSuccess(null)
     try {
       const res = await fetch('/api/admin/delete-user', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: profile.user_id }),
       })
+      const data = await res.json()
       if (res.ok) {
-        setProfiles(prev => prev.filter(p => p.id !== profile.id))
+        // Mark as inactive in local state (soft delete)
+        setProfiles(prev => prev.map(p => p.id === profile.id ? { ...p, is_active: false } : p))
+        setDeleteSuccess(`${profile.full_name} деактивирован`)
+        setTimeout(() => setDeleteSuccess(null), 4000)
+      } else {
+        setDeleteError(data.error ?? 'Не удалось деактивировать пользователя')
       }
+    } catch {
+      setDeleteError('Ошибка сети. Попробуйте снова.')
     } finally {
       setDeletingId(null)
       setConfirmDeleteId(null)
@@ -239,7 +329,7 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-[var(--text)] text-sm">{ann.title}</h3>
-                      {ann.pinned && <span className="text-xs bg-[var(--accent)] text-[var(--text)] px-2 py-0.5 rounded-full font-medium">📌 Закреплено</span>}
+                      {ann.pinned && <span className="text-xs bg-[var(--accent)] text-white px-2 py-0.5 rounded-full font-medium">📌 Закреплено</span>}
                     </div>
                     <p className="text-sm text-[var(--text-2)] leading-relaxed">{ann.body}</p>
                     <p className="text-xs text-[var(--text-3)] mt-1.5">{new Date(ann.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
@@ -252,7 +342,7 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
                     <button onClick={() => setEditingAnn(ann)} className="p-1.5 rounded-lg text-[var(--text-3)] hover:bg-[var(--surface-2)] transition-colors">
                       <Edit3 size={14} />
                     </button>
-                    <button onClick={() => deleteAnnouncement(ann.id)} className="p-1.5 rounded-lg text-[var(--text-3)] hover:bg-red-950/30 hover:text-red-400 transition-colors">
+                    <button onClick={() => deleteAnnouncement(ann.id)} className="p-1.5 rounded-lg text-[var(--text-3)] hover:bg-red-50/80 hover:text-red-600 transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -427,7 +517,7 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
                         <Edit3 size={14} />
                       </button>
                       <button onClick={() => deleteEvent(event.id)}
-                        className="p-1.5 rounded-lg text-[var(--text-3)] hover:bg-red-950/30 hover:text-red-400 transition-colors"
+                        className="p-1.5 rounded-lg text-[var(--text-3)] hover:bg-red-50/80 hover:text-red-600 transition-colors"
                         title="Удалить">
                         <Trash2 size={14} />
                       </button>
@@ -443,16 +533,38 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
       {/* Participants */}
       {tab === 'participants' && (
         <div className="space-y-4">
-          <h2 className="font-bold text-[var(--text)]">Участники ({profiles.length})</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="font-bold text-[var(--text)] flex-1">
+              Участники ({profiles.filter(p => p.is_active).length} активных
+              {profiles.some(p => !p.is_active) && ` / ${profiles.filter(p => !p.is_active).length} деакт.`})
+            </h2>
+          </div>
+
+          {/* Success banner */}
+          {deleteSuccess && (
+            <div className="flex items-center gap-3 bg-green-50/80 border border-green-200/60 rounded-xl px-4 py-3">
+              <span className="text-green-600 text-sm font-semibold">✓ {deleteSuccess}</span>
+            </div>
+          )}
+
+          {/* Error banner */}
+          {deleteError && (
+            <div className="flex items-center justify-between gap-3 bg-red-50/80 border border-red-200/60 rounded-xl px-4 py-3">
+              <span className="text-red-600 text-sm font-semibold">✗ {deleteError}</span>
+              <button onClick={() => setDeleteError(null)} className="text-red-400 hover:text-red-600 transition-colors">
+                <X size={14} />
+              </button>
+            </div>
+          )}
 
           {/* Confirm delete dialog */}
           {confirmDeleteId && (() => {
             const target = profiles.find(p => p.id === confirmDeleteId)
             return target ? (
-              <div className="bg-red-950/25 border-2 border-red-800/40 rounded-2xl p-4 flex items-center gap-4">
+              <div className="bg-red-50/80 border-2 border-red-200/60 rounded-2xl p-4 flex items-center gap-4">
                 <div className="flex-1">
-                  <p className="font-bold text-red-400 text-sm">Удалить участника?</p>
-                  <p className="text-xs text-red-400 mt-0.5">
+                  <p className="font-bold text-red-600 text-sm">Удалить участника?</p>
+                  <p className="text-xs text-red-600 mt-0.5">
                     <strong>{target.full_name}</strong> будет удалён безвозвратно вместе со всеми данными.
                   </p>
                 </div>
@@ -466,7 +578,7 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
                   </button>
                   <button
                     onClick={() => setConfirmDeleteId(null)}
-                    className="px-3 py-1.5 bg-[var(--surface)] text-red-400 border border-red-800/40 text-xs font-bold rounded-xl hover:bg-red-950/25 transition-colors"
+                    className="px-3 py-1.5 bg-white/70 text-red-600 border border-red-200/60 text-xs font-bold rounded-xl hover:bg-red-50/80 transition-colors"
                   >
                     Отмена
                   </button>
@@ -482,14 +594,16 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
                   <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]">
                     <th className="text-left px-4 py-3 font-semibold text-[var(--text-2)]">Участник</th>
                     <th className="text-left px-4 py-3 font-semibold text-[var(--text-2)] hidden sm:table-cell">Роль</th>
+                    <th className="text-center px-4 py-3 font-semibold text-[var(--text-2)]">Статус</th>
                     <th className="text-center px-4 py-3 font-semibold text-[var(--text-2)]">Встреч</th>
                     <th className="text-center px-4 py-3 font-semibold text-[var(--text-2)]">Админ</th>
-                    <th className="text-center px-4 py-3 font-semibold text-[var(--text-2)]">Удалить</th>
+                    <th className="text-center px-4 py-3 font-semibold text-[var(--text-2)]">Ред.</th>
+                    <th className="text-center px-4 py-3 font-semibold text-[var(--text-2)]">Деакт.</th>
                   </tr>
                 </thead>
                 <tbody>
                   {profiles.map(p => (
-                    <tr key={p.id} className={`border-b border-[var(--border)] last:border-0 transition-colors ${confirmDeleteId === p.id ? 'bg-red-950/25' : 'hover:bg-[var(--surface-2)]'}`}>
+                    <tr key={p.id} className={`border-b border-[var(--border)] last:border-0 transition-colors ${confirmDeleteId === p.id ? 'bg-red-50/80' : 'hover:bg-[var(--surface-2)]'}`}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded-full bg-[var(--accent)] flex items-center justify-center text-[var(--text)] text-xs font-black shrink-0">
@@ -503,6 +617,16 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
                       </td>
                       <td className="px-4 py-3 text-[var(--text-2)] hidden sm:table-cell">
                         {p.profession ?? '—'}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full ${
+                          p.is_active
+                            ? 'bg-green-100/80 text-green-700 border border-green-200/60'
+                            : 'bg-red-100/80 text-red-600 border border-red-200/60'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${p.is_active ? 'bg-green-500' : 'bg-red-400'}`} />
+                          {p.is_active ? 'Активен' : 'Деакт.'}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--accent)] text-[var(--text)] text-xs font-black">
@@ -525,10 +649,19 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
                       </td>
                       <td className="px-4 py-3 text-center">
                         <button
+                          onClick={() => openEditProfile(p)}
+                          title="Редактировать профиль"
+                          className="w-8 h-8 rounded-xl flex items-center justify-center mx-auto text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
                           onClick={() => setConfirmDeleteId(p.id === confirmDeleteId ? null : p.id)}
                           disabled={p.id === myProfile.id || deletingId === p.id}
-                          title={p.id === myProfile.id ? 'Нельзя удалить себя' : 'Удалить участника'}
-                          className="w-8 h-8 rounded-xl flex items-center justify-center mx-auto text-[var(--text-3)] hover:bg-red-950/30 hover:text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={p.id === myProfile.id ? 'Нельзя удалить себя' : 'Деактивировать участника'}
+                          className="w-8 h-8 rounded-xl flex items-center justify-center mx-auto text-[var(--text-3)] hover:bg-red-50/80 hover:text-red-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -542,14 +675,140 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
         </div>
       )}
 
+      {/* ── Edit Profile Modal ─────────────────────────────────────────────── */}
+      {editingProfile && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center rk-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) closeEditProfile() }}>
+          <div className="rk-modal w-full sm:max-w-lg max-h-[90dvh] overflow-y-auto sm:rounded-3xl rounded-t-3xl rounded-b-none p-6 space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-black text-[var(--text)] text-lg">Редактировать профиль</h2>
+                <p className="text-xs text-[var(--text-3)] mt-0.5">{editingProfile.full_name}</p>
+              </div>
+              <button onClick={closeEditProfile} className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-3)] hover:bg-[var(--surface-2)] transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+
+            {editSuccess && (
+              <div className="bg-green-50/80 border border-green-200/60 rounded-xl px-4 py-2.5 text-sm text-green-700 font-semibold">✓ {editSuccess}</div>
+            )}
+            {editError && (
+              <div className="bg-red-50/80 border border-red-200/60 rounded-xl px-4 py-2.5 text-sm text-red-600 font-semibold">✗ {editError}</div>
+            )}
+
+            <div className="space-y-3">
+              {/* Status toggle */}
+              <div className="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-xl">
+                <span className="text-sm font-semibold text-[var(--text)]">Активен в сообществе</span>
+                <button
+                  type="button"
+                  onClick={() => setEditForm(f => ({ ...f, is_active: !f.is_active }))}
+                  className={`w-11 h-6 rounded-full transition-colors relative ${editForm.is_active ? 'bg-green-500' : 'bg-[var(--border)]'}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${editForm.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+
+              {/* Basic fields */}
+              {([
+                { key: 'full_name',  label: 'Имя и фамилия *' },
+                { key: 'username',   label: 'Telegram (@username)' },
+                { key: 'profession', label: 'Должность / роль' },
+                { key: 'city',       label: 'Город' },
+              ] as const).map(({ key, label }) => (
+                <div key={key}>
+                  <label className="block text-xs font-semibold text-[var(--text-2)] mb-1">{label}</label>
+                  <input
+                    className={inputCls}
+                    value={(editForm[key] as string) ?? ''}
+                    onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
+                  />
+                </div>
+              ))}
+
+              {/* Textareas */}
+              {([
+                { key: 'bio',       label: 'О себе' },
+                { key: 'goals',     label: 'Цели и запросы' },
+                { key: 'help_with', label: 'Чем могу помочь' },
+              ] as const).map(({ key, label }) => (
+                <div key={key}>
+                  <label className="block text-xs font-semibold text-[var(--text-2)] mb-1">{label}</label>
+                  <textarea
+                    rows={2}
+                    className={`${inputCls} resize-none`}
+                    value={(editForm[key] as string) ?? ''}
+                    onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
+                  />
+                </div>
+              ))}
+
+              {/* Interests */}
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-2)] mb-1">Интересы (через запятую)</label>
+                <input
+                  className={inputCls}
+                  value={Array.isArray(editForm.interests) ? editForm.interests.join(', ') : ''}
+                  onChange={e => setEditForm(f => ({ ...f, interests: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                />
+              </div>
+
+              {/* Looking for */}
+              <div>
+                <p className="text-xs font-semibold text-[var(--text-2)] mb-2">Ищу встречи для</p>
+                <div className="flex flex-wrap gap-2">
+                  {GOAL_OPTIONS.map(({ value, label }) => {
+                    const selected = (editForm.looking_for ?? []).includes(value)
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setEditForm(f => ({
+                          ...f,
+                          looking_for: selected
+                            ? (f.looking_for ?? []).filter(g => g !== value)
+                            : [...(f.looking_for ?? []), value],
+                        }))}
+                        className={`px-3 py-1.5 rounded-xl border-2 text-xs font-semibold transition-all ${
+                          selected
+                            ? 'border-[var(--text)] bg-white/50 text-[var(--text)]'
+                            : 'border-[var(--border)] text-[var(--text-3)] hover:border-[var(--text)]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={saveEditProfile}
+                disabled={editLoading || !editForm.full_name}
+                className={`${btnPrimary} flex-1 justify-center disabled:opacity-40`}
+              >
+                <Save size={14} /> {editLoading ? 'Сохраняем...' : 'Сохранить'}
+              </button>
+              <button onClick={closeEditProfile} className={btnGhost}>
+                <X size={14} /> Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       {tab === 'stats' && (
         <div className="space-y-4">
           <h2 className="font-bold text-[var(--text)]">Статистика платформы</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: 'Участников', value: profiles.length, icon: Users, accent: true },
-              { label: 'Встреч', value: Object.values(meetingCounts).reduce((s, v) => s + v, 0), icon: Coffee, accent: false },
+              { label: 'Участников', value: profiles.filter(p => p.is_active).length, icon: Users, accent: true },
+              { label: 'Встреч', value: profiles.filter(p => p.is_active).reduce((s, p) => s + (meetingCounts[p.id] ?? 0), 0), icon: Coffee, accent: false },
               { label: 'Мэтчей', value: totalMatches, icon: Shuffle, accent: true },
               { label: 'Событий', value: events.length, icon: Calendar, accent: false },
             ].map(({ label, value, icon: Icon, accent }) => (
@@ -567,7 +826,7 @@ export default function AdminClient({ myProfile, announcements: initAnnouncement
             <h3 className="font-semibold text-[var(--text)] mb-4">Топ участников по встречам</h3>
             <div className="space-y-2">
               {profiles
-                .filter(p => (meetingCounts[p.id] ?? 0) > 0)
+                .filter(p => p.is_active && (meetingCounts[p.id] ?? 0) > 0)
                 .sort((a, b) => (meetingCounts[b.id] ?? 0) - (meetingCounts[a.id] ?? 0))
                 .slice(0, 10)
                 .map((p, i) => (

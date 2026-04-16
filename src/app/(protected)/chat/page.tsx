@@ -111,11 +111,11 @@ export default async function ChatListPage() {
 
       {/* Header */}
       <div className="flex items-center gap-4 rk-fade-up">
-        <div className="w-12 h-12 rounded-2xl bg-[var(--accent)] flex items-center justify-center shrink-0">
+        <div className="w-12 h-12 rounded-2xl glass-sm flex items-center justify-center shrink-0">
           <MessageCircle size={20} className="text-[var(--text)]" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-[var(--text)]">Сообщения</h1>
+          <h1 className="text-[28px] font-bold text-[var(--text)] tracking-tight">Сообщения</h1>
           <p className="text-sm text-[var(--text-2)]">Переписка с твоими парами</p>
         </div>
       </div>

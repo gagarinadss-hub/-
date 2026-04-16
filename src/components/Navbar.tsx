@@ -60,13 +60,13 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
   return (
     <>
       {/* ── Desktop: left sidebar ─────────────────────────────────────────── */}
-      <aside className="rk-sidebar hidden lg:flex flex-col fixed left-0 top-0 bottom-0 bg-[var(--surface)]/95 backdrop-blur-xl border-r border-[var(--border)] z-40 shadow-[1px_0_0_rgba(0,0,0,0.3)] overflow-y-auto overflow-x-hidden">
+      <aside aria-label="Боковая навигация" className="rk-sidebar hidden lg:flex flex-col fixed left-0 top-0 bottom-0 glass border-r z-40 overflow-y-auto overflow-x-hidden" style={{ borderColor: 'rgba(255,255,255,0.20)', boxShadow: '1px 0 0 rgba(255,255,255,0.12), 4px 0 32px rgba(0,0,0,0.12)' }}>
 
         {/* Logo */}
         <div className="px-4 pt-5 pb-4">
-          <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <Coffee size={15} className="text-[var(--text)]" />
+          <Link href="/dashboard" className="flex items-center gap-2.5 group focus-visible:ring-2 focus-visible:ring-[var(--accent-dark)] focus-visible:ring-offset-2 rounded-xl">
+            <div className="w-8 h-8 rounded-xl glass-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform" aria-hidden="true">
+              <Coffee size={16} className="text-[var(--text)]" />
             </div>
             <p className="font-black text-[var(--text)] text-sm">Random Coffee</p>
           </Link>
@@ -74,8 +74,8 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
 
         {/* User identity */}
         {userName && (
-          <div className="mx-3 mb-3 px-3 py-2.5 rounded-2xl bg-[var(--surface-2)] flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[var(--accent)] flex items-center justify-center font-black text-xs text-[var(--text)] shrink-0 overflow-hidden">
+          <div className="mx-3 mb-3 px-3 py-2.5 rounded-2xl glass-sm flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-white/40 flex items-center justify-center font-black text-xs text-[var(--text)] shrink-0 overflow-hidden">
               {userAvatar ? (
                 <NextImage src={userAvatar} alt={userName} width={32} height={32} className="w-full h-full object-cover" unoptimized />
               ) : (
@@ -101,10 +101,11 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
             const badge  = href === '/chat' ? msgCount : 0
             return (
               <Link key={href} href={href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-150 ${
+                aria-current={active ? 'page' : undefined}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 min-h-[44px] ${
                   active
-                    ? 'bg-[var(--accent)] text-[var(--text)] font-semibold'
-                    : 'text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
+                    ? 'bg-white/40 text-[var(--text)] font-semibold shadow-sm'
+                    : 'text-[var(--text-2)] hover:bg-white/25 hover:text-[var(--text)]'
                 }`}
               >
                 <div className="relative shrink-0">
@@ -113,7 +114,7 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
                 </div>
                 <span className="flex-1 text-[13px]">{label}</span>
                 {badge > 0 && (
-                  <span className="text-[10px] font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-white bg-red-500/80 px-1.5 py-0.5 rounded-full">
                     {badge}
                   </span>
                 )}
@@ -123,10 +124,10 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
 
           {/* Notifications */}
           <Link href="/notifications"
-            className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-150 ${
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 min-h-[44px] ${
               pathname === '/notifications'
-                ? 'bg-[var(--accent)] text-[var(--text)] font-semibold'
-                : 'text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
+                ? 'bg-white/40 text-[var(--text)] font-semibold shadow-sm'
+                : 'text-[var(--text-2)] hover:bg-white/25 hover:text-[var(--text)]'
             }`}
           >
             <div className="relative shrink-0">
@@ -135,7 +136,7 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
             </div>
             <span className="flex-1 text-[13px]">Уведомления</span>
             {notifCount > 0 && (
-              <span className="text-[10px] font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold text-white bg-red-500/80 px-1.5 py-0.5 rounded-full">
                 {notifCount}
               </span>
             )}
@@ -145,10 +146,10 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
             <>
               <div className="my-2 mx-1 h-px bg-[var(--border)]" />
               <Link href="/admin"
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-150 ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 min-h-[44px] ${
                   isActive('/admin')
-                    ? 'bg-[var(--accent)] text-[var(--text)] font-semibold'
-                    : 'text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
+                    ? 'bg-white/40 text-[var(--text)] font-semibold shadow-sm'
+                    : 'text-[var(--text-2)] hover:bg-white/25 hover:text-[var(--text)]'
                 }`}
               >
                 <Shield size={16} />
@@ -160,17 +161,17 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
 
         {/* Sign out */}
         <div className="p-3 border-t border-[var(--border)]">
-          <button onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-3)] hover:bg-red-50 hover:text-red-500 transition-all"
+          <button onClick={handleSignOut} aria-label="Выйти из аккаунта"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-3)] hover:bg-white/25 hover:text-[var(--text)] transition-all"
           >
-            <LogOut size={17} />
+            <LogOut size={17} aria-hidden="true" />
             Выйти
           </button>
         </div>
       </aside>
 
       {/* ── Mobile: bottom bar ────────────────────────────────────────────── */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[var(--surface)]/95 backdrop-blur-sm border-t border-[var(--border)] z-40 safe-area-bottom">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 glass border-t z-40 safe-area-bottom" aria-label="Основная навигация">
         <div className="flex items-center justify-around px-1 pt-1.5 pb-1.5">
           {[
             { href: '/dashboard',     label: 'Главная',  icon: Home,          badge: 0 },
@@ -182,27 +183,27 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
             const active = isActive(href)
             return (
               <Link key={href} href={href}
-                className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all ${
-                  active ? 'text-[var(--text)]' : 'text-[var(--text-3)]'
+                className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl transition-all min-h-[52px] justify-center ${
+                  active ? 'text-[var(--text)]' : 'text-[var(--text-2)]'
                 }`}
               >
-                <div className={`relative w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-                  active ? 'bg-[var(--accent)]/30 scale-110' : ''
+                <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                  active ? 'bg-white/40 scale-110' : ''
                 }`}>
-                  <Icon size={17} />
+                  <Icon size={18} />
                   <Badge count={badge} />
                 </div>
                 <span className="text-[9px] font-semibold tracking-tight leading-tight">{label}</span>
               </Link>
             )
           })}
-          <button onClick={handleSignOut}
-            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[var(--text-3)] hover:text-red-500 transition-all"
+          <button onClick={handleSignOut} aria-label="Выйти из аккаунта"
+            className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-xl text-[var(--text-3)] hover:text-[var(--text)] transition-all min-h-[52px] justify-center"
           >
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center">
-              <LogOut size={17} />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+              <LogOut size={18} aria-hidden="true" />
             </div>
-            <span className="text-[9px] font-semibold tracking-tight">Выйти</span>
+            <span className="text-[9px] font-semibold tracking-tight" aria-hidden="true">Выйти</span>
           </button>
         </div>
       </nav>

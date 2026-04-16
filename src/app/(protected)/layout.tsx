@@ -66,7 +66,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
       profileId={profileId}
       userId={user.id}
     >
-      <div className="min-h-dvh bg-[var(--bg)]">
+      <div className="min-h-dvh">
         <Navbar isAdmin={isAdmin} userName={profile?.full_name ?? null} userAvatar={profile?.avatar_url ?? null} />
         <main className="rk-main py-6 pb-28 lg:pb-10 min-h-dvh">
           <div className="rk-content">

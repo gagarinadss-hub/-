@@ -1,6 +1,12 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+
+export const metadata: Metadata = {
+  title: 'Мои пары',
+  description: 'Принимай или отклоняй встречи с новыми участниками сообщества.',
+}
 import type { Profile, Match } from '@/lib/types'
 import MatchClient from './MatchClient'
 

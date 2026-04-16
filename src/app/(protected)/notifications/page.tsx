@@ -7,12 +7,12 @@ import { Bell, Heart, MessageCircle, Calendar, Star, Coffee } from 'lucide-react
 import MarkNotifsRead from '@/components/MarkNotifsRead'
 
 const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-  match_found:       { icon: Heart,         color: 'text-[var(--accent)]',   bg: 'bg-[var(--accent-light)]'  },
-  new_message:       { icon: MessageCircle, color: 'text-[var(--blue)]',     bg: 'bg-[var(--blue-light)]'    },
-  meeting_proposed:  { icon: Calendar,      color: 'text-[var(--purple)]',   bg: 'bg-[var(--purple-light)]'  },
-  meeting_confirmed: { icon: Coffee,        color: 'text-green-400',         bg: 'bg-green-950/30'           },
-  feedback_request:  { icon: Star,          color: 'text-[var(--warning)]',  bg: 'bg-amber-950/30'           },
-  default:           { icon: Bell,          color: 'text-[var(--text-2)]',   bg: 'bg-[var(--surface-2)]'     },
+  match_found:       { icon: Heart,         color: 'text-pink-200',    bg: 'bg-pink-500/20'    },
+  new_message:       { icon: MessageCircle, color: 'text-blue-200',    bg: 'bg-blue-500/20'    },
+  meeting_proposed:  { icon: Calendar,      color: 'text-purple-200',  bg: 'bg-purple-500/20'  },
+  meeting_confirmed: { icon: Coffee,        color: 'text-green-200',   bg: 'bg-green-500/20'   },
+  feedback_request:  { icon: Star,          color: 'text-amber-200',   bg: 'bg-amber-500/20'   },
+  default:           { icon: Bell,          color: 'text-[var(--text-2)]', bg: 'bg-white/25'    },
 }
 
 export default async function NotificationsPage() {
@@ -49,7 +49,7 @@ export default async function NotificationsPage() {
           <Bell size={20} className="text-[var(--text)]" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-[var(--text)]">Уведомления</h1>
+          <h1 className="text-[28px] font-bold text-[var(--text)] tracking-tight">Уведомления</h1>
           <p className="text-sm text-[var(--text-2)]">
             {unreadCount > 0 ? `${unreadCount} новых` : 'Всё прочитано'}
           </p>
@@ -57,7 +57,7 @@ export default async function NotificationsPage() {
       </div>
 
       {list.length === 0 ? (
-        <div className="rk-fade-up-1 bg-[var(--surface)] rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center">
+        <div className="rk-fade-up-1 glass rounded-2xl border-2 border-dashed border-white/25 p-12 text-center">
           <div className="w-16 h-16 bg-[var(--accent)] rounded-2xl flex items-center justify-center mx-auto mb-5">
             <Bell size={28} className="text-[var(--text)]" />
           </div>
@@ -76,8 +76,8 @@ export default async function NotificationsPage() {
                 key={n.id}
                 className={`flex items-start gap-4 p-4 rounded-2xl border transition-all rk-fade-up ${
                   !n.is_read
-                    ? 'bg-[var(--accent-light)] border-[var(--accent)]/30'
-                    : 'bg-[var(--surface)] border-[var(--border)]'
+                    ? 'glass border-white/35'
+                    : 'glass-sm border-white/20'
                 }`}
                 style={{ animationDelay: `${idx * 0.04}s` }}
               >
@@ -99,12 +99,12 @@ export default async function NotificationsPage() {
                 </div>
                 {n.link && (
                   <Link href={n.link}
-                    className="shrink-0 text-xs font-bold px-3 py-1.5 bg-[var(--accent)] text-[var(--text)] rounded-xl hover:bg-[var(--accent-dark)] transition-colors">
+                    className="shrink-0 text-xs font-bold px-3 py-2.5 glow-btn rounded-xl min-h-[44px] flex items-center">
                     Открыть →
                   </Link>
                 )}
                 {!n.is_read && (
-                  <div className="w-2 h-2 rounded-full bg-[var(--accent)] shrink-0 mt-2" />
+                  <div className="w-2 h-2 rounded-full bg-white/60 shrink-0 mt-2" />
                 )}
               </div>
             )

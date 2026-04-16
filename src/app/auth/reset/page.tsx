@@ -3,11 +3,13 @@
 import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Coffee, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 function ResetForm() {
   const [password, setPassword]         = useState('')
+  const [confirm, setConfirm]           = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm]   = useState(false)
   const [loading, setLoading]           = useState(false)
   const [checking, setChecking]         = useState(true)
   const [hasSession, setHasSession]     = useState(false)
@@ -21,18 +23,10 @@ function ResetForm() {
     async function checkSession() {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        setHasSession(true)
-        setChecking(false)
-        return
-      }
+      if (session) { setHasSession(true); setChecking(false); return }
       tries++
-      if (tries < maxTries) {
-        setTimeout(checkSession, 500)
-      } else {
-        setChecking(false)
-        setError('Ссылка недействительна или истекла. Запроси сброс пароля заново.')
-      }
+      if (tries < maxTries) setTimeout(checkSession, 500)
+      else { setChecking(false) }
     }
 
     const supabase = createClient()
@@ -44,95 +38,147 @@ function ResetForm() {
     })
 
     checkSession()
-
     return () => subscription.unsubscribe()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError('')
+
+    if (password !== confirm) {
+      setError('Пароли не совпадают — проверь оба поля')
+      return
+    }
+
+    setLoading(true)
     const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      setDone(true)
-      setTimeout(() => { window.location.href = '/dashboard' }, 2000)
-    }
+    if (error) { setError(error.message); setLoading(false) }
+    else { setDone(true); setTimeout(() => { window.location.href = '/dashboard' }, 1800) }
   }
 
-  if (checking) {
-    return (
-      <div className="bg-[#1A1A1A] rounded-2xl border border-[rgba(255,255,255,0.10)] p-8 shadow-sm text-center">
-        <div className="w-8 h-8 border-2 border-[#C8A27C] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-sm text-[#A8A39E]">Проверяем ссылку…</p>
-      </div>
-    )
-  }
+  // ── Checking link ─────────────────────────────────────────────────────────────
 
-  if (done) {
-    return (
-      <div className="bg-[#1A1A1A] rounded-2xl border border-[rgba(255,255,255,0.10)] p-8 shadow-sm text-center">
-        <div className="w-14 h-14 bg-[#C8A27C] rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">✓</div>
-        <h2 className="font-bold text-[#F0EDE8] mb-2">Пароль установлен!</h2>
-        <p className="text-sm text-[#A8A39E]">Перенаправляем в продукт…</p>
-      </div>
-    )
-  }
+  if (checking) return (
+    <div className="glass rounded-3xl p-8 text-center">
+      <div className="w-8 h-8 border-2 border-[var(--text-3)] border-t-[var(--text)] rounded-full animate-spin mx-auto mb-3" />
+      <p className="text-sm text-[var(--text-2)]">Проверяем ссылку…</p>
+    </div>
+  )
 
-  if (!hasSession) {
-    return (
-      <div className="bg-[#1A1A1A] rounded-2xl border border-[rgba(255,255,255,0.10)] p-6 shadow-sm">
-        <div className="flex items-start gap-3 p-3 bg-red-950/30 rounded-xl border border-red-800/40 mb-4">
-          <AlertCircle size={16} className="text-red-400 mt-0.5 shrink-0" />
-          <p className="text-sm text-red-400">{error}</p>
-        </div>
-        <Link href="/auth"
-          className="w-full py-3 bg-[#C8A27C] text-[#0F0F0F] rounded-xl font-bold hover:opacity-85 transition-opacity text-sm flex items-center justify-center gap-2">
-          Запросить новую ссылку
-        </Link>
+  // ── Success ───────────────────────────────────────────────────────────────────
+
+  if (done) return (
+    <div className="glass rounded-3xl p-8 text-center">
+      <div className="text-4xl mb-3">✅</div>
+      <h2 className="font-bold text-[var(--text)] text-lg mb-1">Пароль успешно обновлён!</h2>
+      <p className="text-sm text-[var(--text-2)]">Входим в аккаунт…</p>
+    </div>
+  )
+
+  // ── Expired / invalid link ────────────────────────────────────────────────────
+
+  if (!hasSession) return (
+    <div className="glass rounded-3xl p-6 space-y-4">
+      <div className="text-3xl text-center">🔗</div>
+      <div className="text-center">
+        <h2 className="font-bold text-[var(--text)] mb-1">Ссылка больше не работает</h2>
+        <p className="text-sm text-[var(--text-2)]">
+          Ссылки для восстановления пароля действуют один час и работают только один раз.
+          Запроси новую — это займёт пару секунд.
+        </p>
       </div>
-    )
-  }
+      <Link
+        href="/auth?forgot=1"
+        className="w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 glow-btn"
+      >
+        Запросить новую ссылку <ArrowRight size={15} />
+      </Link>
+    </div>
+  )
+
+  // ── New password form ─────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-[#1A1A1A] rounded-2xl border border-[rgba(255,255,255,0.10)] p-6 shadow-sm">
-      <h2 className="font-bold text-[#F0EDE8] mb-1">Установить новый пароль</h2>
-      <p className="text-sm text-[#A8A39E] mb-5">После сохранения сразу войдёшь в продукт</p>
+    <div className="glass rounded-3xl p-6">
+      <h2 className="font-bold text-[var(--text)] text-lg mb-1">Новый пароль</h2>
+      <p className="text-sm text-[var(--text-2)] mb-5">После сохранения сразу войдёшь в продукт</p>
 
       {error && (
-        <div className="flex items-start gap-2 p-3 bg-red-950/30 rounded-xl border border-red-800/40 mb-4">
-          <AlertCircle size={15} className="text-red-400 mt-0.5 shrink-0" />
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="flex items-start gap-2 p-3 bg-red-500/15 rounded-2xl border border-red-400/30 mb-4">
+          <AlertCircle size={15} className="text-red-200 mt-0.5 shrink-0" />
+          <p className="text-sm text-red-100">{error}</p>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="new-password" className="block text-sm font-medium text-[#F0EDE8] mb-1.5">
+          <label htmlFor="new-password" className="block text-sm font-semibold text-[var(--text)] mb-1.5">
             Новый пароль
           </label>
           <div className="relative">
             <input
               id="new-password"
               type={showPassword ? 'text' : 'password'}
-              value={password} onChange={(e) => setPassword(e.target.value)}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Минимум 6 символов"
-              required minLength={6} autoComplete="new-password"
-              className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-[rgba(255,255,255,0.10)] text-[#F0EDE8] placeholder-[#6B6560] focus:outline-none focus:ring-2 focus:ring-[#C8A27C] focus:border-transparent text-sm bg-[#242420]"
+              required
+              minLength={6}
+              autoComplete="new-password"
+              className="glass-input w-full px-4 py-2.5 pr-10 rounded-xl text-sm"
             />
-            <button type="button" onClick={() => setShowPassword(v => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6560] hover:text-[#F0EDE8]">
+            <button
+              type="button"
+              onClick={() => setShowPassword(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] hover:text-[var(--text-2)]"
+              aria-label={showPassword ? 'Скрыть' : 'Показать'}
+            >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </div>
 
-        <button type="submit" disabled={loading || password.length < 6}
-          className="w-full py-3 bg-[#C8A27C] text-[#0F0F0F] rounded-xl font-bold hover:opacity-85 transition-opacity disabled:opacity-40 text-sm flex items-center justify-center gap-2">
-          {loading ? 'Сохраняем…' : <><span>Сохранить пароль</span><ArrowRight size={15} /></>}
+        <div>
+          <label htmlFor="confirm-password" className="block text-sm font-semibold text-[var(--text)] mb-1.5">
+            Повторите новый пароль
+          </label>
+          <div className="relative">
+            <input
+              id="confirm-password"
+              type={showConfirm ? 'text' : 'password'}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Повторите пароль"
+              required
+              minLength={6}
+              autoComplete="new-password"
+              className={`glass-input w-full px-4 py-2.5 pr-10 rounded-xl text-sm ${
+                confirm && confirm !== password ? 'border-red-400/60' : ''
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] hover:text-[var(--text-2)]"
+              aria-label={showConfirm ? 'Скрыть' : 'Показать'}
+            >
+              {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {confirm && confirm !== password && (
+            <p className="text-xs text-red-300 mt-1.5 ml-1">Пароли не совпадают</p>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || password.length < 6 || confirm.length < 6}
+          className="w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 glow-btn"
+        >
+          {loading
+            ? 'Сохраняем…'
+            : <><span>Сохранить новый пароль</span><ArrowRight size={15} /></>}
         </button>
       </form>
     </div>
@@ -141,28 +187,24 @@ function ResetForm() {
 
 export default function ResetPage() {
   return (
-    <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <main className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5 font-black text-[#F0EDE8] text-xl mb-6 group">
-            <div className="w-9 h-9 rounded-xl bg-[#C8A27C] flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Coffee size={17} className="text-[#0F0F0F]" />
-            </div>
+          <Link href="/" className="inline-flex items-center gap-2.5 font-black text-[var(--text)] text-xl mb-6">
+            <div className="w-9 h-9 rounded-2xl glass flex items-center justify-center text-lg">☕</div>
             Random Coffee
           </Link>
-          <h1 className="text-2xl font-black text-[#F0EDE8]">Сброс пароля</h1>
+          <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">Восстановление пароля</h1>
         </div>
-        <Suspense fallback={
-          <div className="bg-[#1A1A1A] rounded-2xl border border-[rgba(255,255,255,0.10)] p-8 shadow-sm animate-pulse h-48" />
-        }>
+        <Suspense fallback={<div className="glass rounded-3xl p-8 animate-pulse h-48" />}>
           <ResetForm />
         </Suspense>
         <p className="text-center mt-4">
-          <Link href="/auth" className="text-xs text-[#6B6560] hover:text-[#F0EDE8] underline">
+          <Link href="/auth" className="text-xs text-[var(--text-3)] hover:text-[var(--text)] underline">
             Вернуться к входу
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   )
 }

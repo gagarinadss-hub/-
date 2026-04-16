@@ -121,7 +121,7 @@ export default function ProfileForm({ profile, userId }: Props) {
 
   const textFields = [
     { key: 'full_name',  label: 'Имя и фамилия',   placeholder: 'Иван Иванов',                               required: true,  type: 'input'    },
-    { key: 'username',   label: 'Username',          placeholder: '@ivanov (необязательно)',                   required: false, type: 'input'    },
+    { key: 'username',   label: 'Telegram',          placeholder: '@ivanov (необязательно)',                   required: false, type: 'input'    },
     { key: 'profession', label: 'Должность / роль',  placeholder: 'CEO, Product Manager, Founder...',         required: false, type: 'input'    },
     { key: 'city',       label: 'Город',             placeholder: 'Москва, Санкт-Петербург...',                required: false, type: 'input'    },
     { key: 'bio',        label: 'О себе',            placeholder: 'Коротко о том, чем занимаешься',           required: false, type: 'textarea' },
@@ -187,6 +187,11 @@ export default function ProfileForm({ profile, userId }: Props) {
               aria-required={field.required}
               className={inputCls} />
           )}
+          {field.key === 'username' && (
+            <p className="text-[11px] text-[var(--text-3)] mt-1.5">
+              ✈️ Участники смогут написать тебе напрямую в Telegram
+            </p>
+          )}
         </div>
       ))}
 
@@ -221,7 +226,7 @@ export default function ProfileForm({ profile, userId }: Props) {
                 onClick={() => toggleGoal(value)}
                 className={`px-3 py-1.5 rounded-xl border-2 text-sm font-medium transition-all ${
                   form.looking_for.includes(value)
-                    ? 'border-[var(--text)] bg-[var(--accent)] text-[var(--text)]'
+                    ? 'border-[var(--text)] bg-white/50 text-[var(--text)] font-bold'
                     : 'border-[var(--border)] text-[var(--text-2)] hover:border-[var(--text)]'
                 }`}
               >
@@ -239,7 +244,7 @@ export default function ProfileForm({ profile, userId }: Props) {
       <button
         type="submit"
         disabled={loading || uploading}
-        className="w-full py-3 bg-[var(--accent)] text-[var(--text)] rounded-xl font-black hover:bg-[var(--accent-dark)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full py-3 rounded-xl font-black disabled:opacity-40 disabled:cursor-not-allowed glow-btn"
       >
         {loading ? 'Сохраняем...' : profile ? 'Сохранить изменения' : 'Создать карточку'}
       </button>

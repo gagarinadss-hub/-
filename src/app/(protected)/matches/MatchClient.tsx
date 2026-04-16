@@ -93,7 +93,7 @@ const historyStatusLabel: Record<string, string> = {
   expired:   'Истёк срок',
 }
 const historyStatusColor: Record<string, string> = {
-  completed: 'bg-green-950/30 text-green-400 border-green-800/40',
+  completed: 'bg-green-50/80 text-green-700 border-green-200/60',
   declined:  'bg-[var(--surface-2)] text-[var(--text-3)] border-[var(--border)]',
   expired:   'bg-[var(--surface-2)] text-[var(--text-3)] border-[var(--border)]',
 }
@@ -253,6 +253,22 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
     setSearching(false); setLoading(false)
     if (error) setSearchError('Ошибка при создании пары. Попробуй снова.')
     else {
+      // Send auto first message to break the ice
+      const { data: newMatch } = await supabase
+        .from('matches')
+        .select('id')
+        .or(`and(user_a_id.eq.${myProfile.id},user_b_id.eq.${winner.id}),and(user_a_id.eq.${winner.id},user_b_id.eq.${myProfile.id})`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (newMatch) {
+        await supabase.from('messages').insert({
+          match_id:     newMatch.id,
+          sender_id:    myProfile.id,
+          receiver_id:  winner.id,
+          message_text: `Привет! Нам предложили познакомиться 👋 Рад(а) встретиться — напиши, когда удобно пообщаться ☕`,
+        })
+      }
       playMatchSound()
       setCelebrating(true)
       setTimeout(() => {
@@ -425,7 +441,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
     if (!activeMatch) return {
       emoji: '👀', title: 'Ты сейчас в поиске собеседника',
       sub: 'Найди пару прямо сейчас — это займёт меньше минуты ☕',
-      cls: 'border-[var(--border)] bg-[var(--surface)]',
+      cls: 'border-white/20 bg-white/12',
     }
     const s = dbMeeting?.status
     if (!s) return {
@@ -434,26 +450,26 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
       cls: 'border-[var(--accent)] bg-[var(--accent-light)]',
     }
     if (s === 'awaiting_response') return isInitiator
-      ? { emoji: '⏳', title: 'Ждём ответа собеседника', sub: `Ты предложил встречу ${fmtDate(dbMeeting!.scheduled_at)} · ${fmtFormat(dbMeeting!.format)}`, cls: 'border-amber-800/40 bg-amber-950/25' }
+      ? { emoji: '⏳', title: 'Ждём ответа собеседника', sub: `Ты предложил встречу ${fmtDate(dbMeeting!.scheduled_at)} · ${fmtFormat(dbMeeting!.format)}`, cls: 'border-amber-300/60 bg-amber-50/80' }
       : { emoji: '📩', title: 'Тебя приглашают на встречу!', sub: `Предложено: ${fmtDate(dbMeeting!.scheduled_at)} · ${fmtFormat(dbMeeting!.format)}`, cls: 'border-[var(--accent)] bg-[var(--accent-light)]' }
     if (s === 'reschedule_requested') return isInitiator
-      ? { emoji: '⏰', title: 'Собеседник предложил другое время', sub: `Новое время: ${fmtDate(dbMeeting!.scheduled_at)} · ${fmtFormat(dbMeeting!.format)}`, cls: 'border-blue-800/40 bg-blue-950/25' }
-      : { emoji: '⏳', title: 'Ждём ответа на твоё предложение', sub: `Ты предложил: ${fmtDate(dbMeeting!.scheduled_at)} · ${fmtFormat(dbMeeting!.format)}`, cls: 'border-amber-800/40 bg-amber-950/25' }
+      ? { emoji: '⏰', title: 'Собеседник предложил другое время', sub: `Новое время: ${fmtDate(dbMeeting!.scheduled_at)} · ${fmtFormat(dbMeeting!.format)}`, cls: 'border-blue-300/60 bg-blue-50/80' }
+      : { emoji: '⏳', title: 'Ждём ответа на твоё предложение', sub: `Ты предложил: ${fmtDate(dbMeeting!.scheduled_at)} · ${fmtFormat(dbMeeting!.format)}`, cls: 'border-amber-300/60 bg-amber-50/80' }
     if (s === 'confirmed') return {
       emoji: '✅', title: 'Встреча подтверждена!',
       sub: `${fmtDate(dbMeeting!.scheduled_at)} · ${fmtFormat(dbMeeting!.format)}`,
-      cls: 'border-green-800/40 bg-green-950/25',
+      cls: 'border-green-300/60 bg-green-50/80',
     }
     if (s === 'declined') return {
       emoji: '😔', title: 'Встреча отклонена',
       sub: 'Собеседник не смог, попробуй предложить другое время',
-      cls: 'border-[var(--border)] bg-[var(--surface-2)]',
+      cls: 'border-white/15 bg-white/8',
     }
     if (s === 'completed') return {
       emoji: alreadyRated ? '🏆' : '☕',
       title: alreadyRated ? 'Встреча завершена, отзыв оставлен!' : 'Встреча состоялась!',
       sub: alreadyRated ? 'Спасибо за отзыв — это улучшит следующий подбор' : 'Оставь оценку, чтобы улучшить следующий подбор',
-      cls: 'border-green-800/40 bg-green-950/25',
+      cls: 'border-green-300/60 bg-green-50/80',
     }
     return {
       emoji: '📅', title: 'Встреча запланирована',
@@ -469,8 +485,8 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
 
       {/* ── Celebration overlay ── */}
       {celebrating && (
-        <div className="fixed inset-0 flex items-center justify-center z-[200] bg-black/20 backdrop-blur-sm">
-          <div className="bg-[var(--surface)] rounded-3xl shadow-2xl px-10 py-8 text-center rk-pop-in mx-4 max-w-xs w-full border border-[var(--border)]">
+        <div className="fixed inset-0 flex items-center justify-center z-[200] rk-overlay">
+          <div className="rk-modal rounded-3xl px-10 py-8 text-center rk-pop-in mx-4 max-w-xs w-full">
             <div className="text-5xl mb-4 rk-celebrate">🎉</div>
             <p className="text-xl font-black text-[var(--text)] mb-1 tracking-tight">+1 новый человек в жизни</p>
             <p className="text-sm text-[var(--text-3)]">Пора написать и назначить кофе ☕</p>
@@ -485,7 +501,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
             <Shuffle size={20} className="text-[var(--text)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-[var(--text)]">Найти пару</h1>
+            <h1 className="text-[28px] font-bold text-[var(--text)] tracking-tight">Найти пару</h1>
             <p className="text-sm text-[var(--text-2)]">Умный подбор собеседника из твоей сферы</p>
           </div>
         </div>
@@ -504,7 +520,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
 
       {/* ── Searching animation ── */}
       {searching && (
-        <div className="bg-[var(--surface)] rounded-[24px] border border-[var(--border)] px-8 py-14 text-center shadow-[var(--shadow-lg)] rk-pop-in">
+        <div className="glass rounded-[24px] px-8 py-14 text-center shadow-[var(--shadow-lg)] rk-pop-in">
           <div className="flex items-center justify-center gap-2.5 mb-8">
             <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] rk-dot" />
             <div className="w-2.5 h-2.5 rounded-full bg-[var(--text)] rk-dot-2" />
@@ -517,7 +533,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
 
       {/* ── Find match — главный CTA ── */}
       {!searching && !activeMatch && (
-        <div className="bg-[var(--surface)] rounded-[24px] border border-[var(--border)] px-8 py-12 text-center shadow-[var(--shadow-lg)] rk-fade-up">
+        <div className="glass rounded-[28px] px-8 py-12 text-center rk-fade-up rk-float" style={{ boxShadow: '0 8px 40px rgba(139,92,246,0.12), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px rgba(255,255,255,0.70)' }}>
 
           {/* Social proof: avatars of community members */}
           {recentProfiles && recentProfiles.length > 0 ? (
@@ -529,7 +545,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                   >
                     {p.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.avatar_url} alt={p.full_name} className="w-full h-full object-cover" />
+                      <img src={p.avatar_url} alt={p.full_name} width={40} height={40} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       p.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)
                     )}
@@ -552,15 +568,20 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
             <div className="mb-8" />
           )}
 
-          <h2 className="text-[28px] font-black text-[var(--text)] mb-3 tracking-tight leading-tight">
-            Найди интересного<br />собеседника
+          <div className="inline-block px-4 py-1.5 rounded-full text-[12px] font-semibold tracking-wider uppercase mb-5"
+            style={{ background: 'rgba(167,139,250,0.18)', color: '#5b21b6', border: '1px solid rgba(167,139,250,0.30)' }}>
+            ✦ Нетворкинг нового уровня
+          </div>
+
+          <h2 className="text-[28px] font-black mb-3 tracking-tight leading-tight" style={{ color: '#1e1b4b' }}>
+            Найди своего человека<br />в бизнесе
           </h2>
-          <p className="text-sm text-[var(--text-2)] max-w-xs mx-auto leading-relaxed mb-8">
-            Умный алгоритм подберёт человека из твоей сферы — для знакомства, партнёрства или обмена опытом
+          <p className="text-sm max-w-xs mx-auto leading-relaxed mb-8" style={{ color: '#4c1d95', opacity: 0.75 }}>
+            Умный алгоритм подберёт человека по ценностям, стилю работы и взаимодополняемости
           </p>
 
           {searchError && (
-            <p className="text-sm text-red-400 bg-red-950/30 border border-red-800/40 px-4 py-2.5 rounded-xl mb-5 text-left">
+            <p className="text-sm text-red-400 bg-red-50/80 border border-red-200/60 px-4 py-2.5 rounded-xl mb-5 text-left">
               {searchError}
             </p>
           )}
@@ -568,7 +589,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
           <button
             onClick={handleNewMatch}
             disabled={loading}
-            className="inline-flex items-center gap-2.5 px-9 py-3.5 bg-[var(--accent)] text-[var(--text)] rounded-2xl font-bold text-base tracking-tight hover:bg-[var(--accent-dark)] hover:scale-[1.02] active:scale-[0.97] disabled:opacity-40 transition-all duration-150 shadow-[0_2px_12px_rgba(200,162,124,0.35)]"
+            className="inline-flex items-center gap-2.5 px-9 py-3.5 font-semibold text-base tracking-tight glow-btn rk-btn"
           >
             <Sparkles size={16} />
             Запустить подбор
@@ -584,12 +605,12 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
 
         return (
           <div className="space-y-3 rk-fade-up">
-            <h2 className="font-black text-[var(--text)]">Твоя текущая пара 🎉</h2>
+            <h2 className="text-[22px] font-bold text-[var(--text)] tracking-tight">Твоя текущая пара 🎉</h2>
 
-            <div className="bg-[var(--surface)] rounded-2xl border-2 border-[var(--accent)] shadow-lg overflow-hidden">
+            <div className="glass rounded-2xl border-2 border-[var(--accent)] shadow-lg overflow-hidden">
               {/* Why matched */}
               {whyMatched && (
-                <div className="bg-[var(--accent)] px-5 py-3 flex items-center gap-2">
+                <div className="bg-white/20 px-5 py-3 flex items-center gap-2">
                   <Sparkles size={14} className="text-[var(--text)] shrink-0" />
                   <p className="text-sm font-bold text-[var(--text)]">Почему вы совпали: {whyMatched}</p>
                 </div>
@@ -603,11 +624,11 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
               {dbMeeting && s !== 'completed' && (
                 <div className={`mx-5 mb-3 flex items-center gap-2 px-4 py-3 rounded-xl border ${
                   s === 'confirmed'
-                    ? 'bg-green-950/25 border-green-800/40'
+                    ? 'bg-green-50/80 border-green-300/60'
                     : s === 'reschedule_requested'
-                    ? 'bg-blue-950/25 border-blue-800/40'
+                    ? 'bg-blue-50/80 border-blue-300/60'
                     : s === 'awaiting_response'
-                    ? 'bg-amber-950/25 border-amber-800/40'
+                    ? 'bg-amber-50/80 border-amber-300/60'
                     : s === 'declined'
                     ? 'bg-[var(--surface-2)] border-[var(--border)]'
                     : 'bg-[var(--blue-light)] border-[var(--blue-mid)]'
@@ -643,7 +664,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
 
               {/* Comment from last proposal */}
               {dbMeeting?.comment && s !== 'completed' && (
-                <div className="mx-5 mb-3 px-4 py-2 bg-[var(--surface-2)] rounded-xl">
+                <div className="mx-5 mb-3 px-4 py-2 glass-sm rounded-xl">
                   <p className="text-xs text-[var(--text-2)] leading-relaxed">
                     <span className="font-semibold">Комментарий: </span>{dbMeeting.comment}
                   </p>
@@ -657,11 +678,11 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                 {!dbMeeting && (
                   <div className="flex gap-2">
                     <Link href={`/chat/${activeMatch.id}`}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[var(--surface-2)] text-[var(--text)] rounded-xl font-bold text-sm border border-[var(--border)] hover:bg-[var(--sand)] transition-colors">
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 glass-sm text-[var(--text)] rounded-xl font-bold text-sm hover:bg-white/35 transition-colors">
                       <MessageCircle size={14} /> Написать
                     </Link>
                     <button onClick={() => setShowPropose(true)}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-[var(--text)] text-[var(--text)] rounded-xl font-bold text-sm hover:bg-[var(--accent-light)] transition-colors">
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-[var(--border)] text-[var(--text)] rounded-xl font-bold text-sm hover:bg-white/25 transition-colors">
                       <Calendar size={14} /> Предложить встречу
                     </button>
                   </div>
@@ -671,10 +692,10 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                 {s === 'awaiting_response' && isInitiator && (
                   <div className="flex gap-2">
                     <Link href={`/chat/${activeMatch.id}`}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[var(--surface-2)] text-[var(--text)] rounded-xl font-bold text-sm border border-[var(--border)] hover:bg-[var(--sand)] transition-colors">
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 glass-sm text-[var(--text)] rounded-xl font-bold text-sm hover:bg-white/35 transition-colors">
                       <MessageCircle size={14} /> Написать
                     </Link>
-                    <div className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-[var(--border)] text-[var(--text-3)] rounded-xl text-sm text-center">
+                    <div className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/50 border border-white/60 text-[var(--text-2)] rounded-xl text-sm text-center">
                       <Clock size={14} /> Ждём ответа…
                     </div>
                   </div>
@@ -683,7 +704,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                 {/* Awaiting response: PARTNER sees confirm / reschedule / decline */}
                 {s === 'awaiting_response' && isPartner && (
                   <>
-                    <div className="p-3 bg-[var(--accent-light)] rounded-xl border border-[var(--accent)]/40 mb-1">
+                    <div className="p-3 glass-accent rounded-xl mb-1">
                       <p className="text-sm font-bold text-[var(--text)] mb-0.5">Тебя приглашают на встречу</p>
                       <p className="text-xs text-[var(--text-2)]">
                         {fmtDate(dbMeeting!.scheduled_at)} · {fmtFormat(dbMeeting!.format)}
@@ -695,12 +716,12 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                         <Check size={14} /> Подтвердить
                       </button>
                       <button onClick={() => { if (dbMeeting?.scheduled_at) setRescheduleDate(new Date(dbMeeting.scheduled_at).toISOString().slice(0, 16)); setShowReschedule(true) }}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-[var(--blue)] text-[var(--blue)] rounded-xl font-bold text-sm hover:bg-[var(--blue-light)] transition-colors">
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 glass-sm text-[var(--text)] rounded-xl font-bold text-sm transition-colors">
                         <RefreshCw size={14} /> Другое время
                       </button>
                     </div>
                     <button onClick={declineMeeting} disabled={meetingLoading}
-                      className="w-full flex items-center justify-center gap-2 py-2 border border-[var(--border)] text-[var(--text-3)] rounded-xl text-sm hover:bg-red-950/30 hover:text-red-400 hover:border-red-800/40 transition-all">
+                      className="w-full flex items-center justify-center gap-2 py-2 border border-[var(--border)] text-[var(--text-3)] rounded-xl text-sm hover:bg-red-50/80 hover:text-red-600 hover:border-red-200/60 transition-all">
                       <X size={13} /> Отклонить встречу
                     </button>
                   </>
@@ -709,9 +730,9 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                 {/* Reschedule requested: INITIATOR sees confirm new time / propose again / message */}
                 {s === 'reschedule_requested' && isInitiator && (
                   <>
-                    <div className="p-3 bg-blue-950/25 rounded-xl border border-blue-800/40 mb-1">
+                    <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-300/60 mb-1">
                       <p className="text-sm font-bold text-[var(--text)] mb-0.5">Собеседник предлагает другое время</p>
-                      <p className="text-xs text-blue-300">
+                      <p className="text-xs text-blue-700">
                         {fmtDate(dbMeeting!.scheduled_at)} · {fmtFormat(dbMeeting!.format)}
                         {dbMeeting!.comment ? ` · "${dbMeeting!.comment}"` : ''}
                       </p>
@@ -722,12 +743,12 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                         <Check size={14} /> Принять
                       </button>
                       <button onClick={() => setShowPropose(true)}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-[var(--text)] text-[var(--text)] rounded-xl font-bold text-sm hover:bg-[var(--accent-light)] transition-colors">
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-[var(--border)] text-[var(--text)] rounded-xl font-bold text-sm hover:bg-white/25 transition-colors">
                         <Calendar size={14} /> Предложить другое
                       </button>
                     </div>
                     <Link href={`/chat/${activeMatch.id}`}
-                      className="w-full flex items-center justify-center gap-2 py-2 border border-[var(--border)] text-[var(--text-2)] rounded-xl text-sm hover:bg-[var(--surface-2)] transition-colors">
+                      className="w-full flex items-center justify-center gap-2 py-2 glass-sm text-[var(--text-2)] rounded-xl text-sm hover:bg-white/35 transition-colors">
                       <MessageCircle size={13} /> Обсудить в чате
                     </Link>
                   </>
@@ -737,10 +758,10 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                 {s === 'reschedule_requested' && isPartner && (
                   <div className="flex gap-2">
                     <Link href={`/chat/${activeMatch.id}`}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[var(--surface-2)] text-[var(--text)] rounded-xl font-bold text-sm border border-[var(--border)] hover:bg-[var(--sand)] transition-colors">
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 glass-sm text-[var(--text)] rounded-xl font-bold text-sm hover:bg-white/35 transition-colors">
                       <MessageCircle size={14} /> Написать
                     </Link>
-                    <div className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-[var(--border)] text-[var(--text-3)] rounded-xl text-sm">
+                    <div className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/50 border border-white/60 text-[var(--text-2)] rounded-xl text-sm">
                       <Clock size={14} /> Ждём ответа…
                     </div>
                   </div>
@@ -750,11 +771,11 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                 {s === 'declined' && isInitiator && (
                   <div className="flex gap-2">
                     <button onClick={() => setShowPropose(true)}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[var(--surface-2)] text-[var(--text)] rounded-xl font-bold text-sm border border-[var(--border)] hover:bg-[var(--sand)] transition-colors">
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 glass-sm text-[var(--text)] rounded-xl font-bold text-sm hover:bg-white/35 transition-colors">
                       <Calendar size={14} /> Предложить другое время
                     </button>
                     <Link href={`/chat/${activeMatch.id}`}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-[var(--border)] text-[var(--text-2)] rounded-xl text-sm hover:bg-[var(--surface-2)] transition-colors">
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 glass-sm text-[var(--text-2)] rounded-xl text-sm hover:bg-white/35 transition-colors">
                       <MessageCircle size={13} /> Написать
                     </Link>
                   </div>
@@ -765,7 +786,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                   <>
                     <div className="flex gap-2">
                       <Link href={`/chat/${activeMatch.id}`}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[var(--surface-2)] text-[var(--text)] rounded-xl font-bold text-sm border border-[var(--border)] hover:bg-[var(--sand)] transition-colors">
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 glass-sm text-[var(--text)] rounded-xl font-bold text-sm hover:bg-white/35 transition-colors">
                         <MessageCircle size={14} /> Написать
                       </Link>
                     </div>
@@ -781,7 +802,7 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
                 {/* Completed + not yet rated */}
                 {s === 'completed' && !alreadyRated && (
                   <button onClick={() => setShowRating(true)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--accent)] text-[var(--text)] rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--accent)] text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
                     <Star size={14} /> Оставить отзыв
                   </button>
                 )}
@@ -807,15 +828,15 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
       {/* ── History ── */}
       {!embedded && matches.filter((m) => m.status !== 'pending').length > 0 && (
         <div>
-          <h2 className="font-black text-[var(--text)] mb-3">История пар</h2>
+          <h2 className="text-[20px] font-semibold text-[var(--text)] tracking-tight mb-3">История пар</h2>
           <div className="space-y-3">
             {matches.filter((m) => m.status !== 'pending').map((match) => {
               const partner = getPartner(match)
               return (
-                <div key={match.id} className="bg-[var(--surface)] rounded-xl border border-[var(--border)] p-4 flex items-center gap-3 rk-card">
+                <div key={match.id} className="glass rounded-xl p-4 flex items-center gap-3 rk-card">
                   {partner && (
                     <>
-                      <div className="w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--text)] flex items-center justify-center font-black text-sm shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-[var(--accent)] text-white flex items-center justify-center font-black text-sm shrink-0">
                         {partner.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -842,53 +863,53 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
 
       {/* ── Propose meeting modal ── */}
       {showPropose && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 rk-overlay flex items-end sm:items-center justify-center z-50 sm:p-4"
           role="dialog" aria-modal="true" aria-labelledby="propose-title"
           onClick={() => setShowPropose(false)}>
-          <div className="bg-[var(--surface)] rounded-3xl w-full max-w-sm p-6 shadow-2xl rk-pop-in"
+          <div className="rk-modal w-full sm:max-w-sm p-6 sm:p-7"
             onClick={(e) => e.stopPropagation()}>
-            <h3 id="propose-title" className="font-black text-lg text-[var(--text)] mb-1">📅 Предложить встречу</h3>
-            <p className="text-sm text-[var(--text-2)] mb-5">Собеседник получит уведомление и сможет подтвердить</p>
-            <div className="space-y-4">
+            <h3 id="propose-title" className="font-black text-lg">📅 Предложить встречу</h3>
+            <p className="text-sm text-[rgba(15,23,42,0.62)] mt-1.5 mb-6">Собеседник получит уведомление и сможет подтвердить</p>
+            <div className="space-y-5">
               <div>
-                <label htmlFor="propose-date" className="block text-sm font-bold text-[var(--text)] mb-1.5">Дата и время</label>
+                <label htmlFor="propose-date" className="block text-sm font-semibold text-[#0F172A] mb-2">Дата и время</label>
                 <input id="propose-date" type="datetime-local"
                   value={proposeDate} onChange={(e) => setProposeDate(e.target.value)}
                   min={new Date().toISOString().slice(0, 16)}
-                  className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--text)] bg-[var(--surface)]" />
+                  className="rk-modal-input" />
               </div>
               <div>
-                <p className="text-sm font-bold text-[var(--text)] mb-2" id="propose-format-label">Формат</p>
-                <div className="grid grid-cols-2 gap-3" role="group" aria-labelledby="propose-format-label">
+                <p className="text-sm font-semibold text-[#0F172A] mb-2" id="propose-format-label">Формат</p>
+                <div className="grid grid-cols-2 gap-2.5" role="group" aria-labelledby="propose-format-label">
                   {(['online', 'offline'] as const).map((fmt) => (
                     <button key={fmt} type="button" aria-pressed={proposeFormat === fmt} onClick={() => setProposeFormat(fmt)}
-                      className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-bold transition-all ${
+                      className={`flex items-center justify-center gap-2 py-3 rounded-[14px] border-2 text-sm font-semibold transition-all ${
                         proposeFormat === fmt
-                          ? 'border-[var(--text)] bg-[var(--accent)] text-[var(--text)]'
-                          : 'border-[var(--border)] text-[var(--text-2)] hover:border-[var(--text)]'
+                          ? 'border-[rgba(15,23,42,0.55)] bg-[rgba(15,23,42,0.06)] text-[#0F172A]'
+                          : 'border-[rgba(15,23,42,0.10)] text-[rgba(15,23,42,0.55)] hover:border-[rgba(15,23,42,0.25)]'
                       }`}>
-                      {fmt === 'online' ? <><Wifi size={16} /> Онлайн</> : <><MapPin size={16} /> Оффлайн</>}
+                      {fmt === 'online' ? <><Wifi size={15} /> Онлайн</> : <><MapPin size={15} /> Оффлайн</>}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label htmlFor="propose-comment" className="block text-sm font-bold text-[var(--text)] mb-1.5">
-                  Комментарий <span className="text-[var(--text-3)] font-normal">(необязательно)</span>
+                <label htmlFor="propose-comment" className="block text-sm font-semibold text-[#0F172A] mb-2">
+                  Комментарий <span className="text-[rgba(15,23,42,0.40)] font-normal">(необязательно)</span>
                 </label>
                 <input id="propose-comment" type="text"
                   value={proposeComment} onChange={(e) => setProposeComment(e.target.value)}
                   placeholder="Например: Zoom 30 мин, или кофейня…"
-                  className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--text)] bg-[var(--surface)]" />
+                  className="rk-modal-input" />
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-7">
               <button onClick={() => setShowPropose(false)}
-                className="flex-1 py-2.5 border border-[var(--border)] text-[var(--text-2)] rounded-xl text-sm hover:bg-[var(--surface-2)] transition-colors">
+                className="rk-modal-btn-secondary flex-1 py-3 rounded-[14px] text-sm font-medium">
                 Отмена
               </button>
               <button onClick={proposeMeeting} disabled={!proposeDate || meetingLoading}
-                className="flex-1 py-2.5 bg-[var(--accent)] text-[var(--text)] rounded-xl text-sm font-bold disabled:opacity-40 hover:bg-[var(--accent-dark)] transition-colors">
+                className="rk-modal-btn-primary flex-1 py-3 rounded-[14px] text-sm">
                 {meetingLoading ? 'Отправляем…' : 'Отправить'}
               </button>
             </div>
@@ -898,53 +919,53 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
 
       {/* ── Reschedule modal (partner) ── */}
       {showReschedule && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 rk-overlay flex items-end sm:items-center justify-center z-50 sm:p-4"
           role="dialog" aria-modal="true" aria-labelledby="reschedule-title"
           onClick={() => setShowReschedule(false)}>
-          <div className="bg-[var(--surface)] rounded-3xl w-full max-w-sm p-6 shadow-2xl rk-pop-in"
+          <div className="rk-modal w-full sm:max-w-sm p-6 sm:p-7"
             onClick={(e) => e.stopPropagation()}>
-            <h3 id="reschedule-title" className="font-black text-lg text-[var(--text)] mb-1">⏰ Предложить другое время</h3>
-            <p className="text-sm text-[var(--text-2)] mb-5">Инициатор встречи получит уведомление</p>
-            <div className="space-y-4">
+            <h3 id="reschedule-title" className="font-black text-lg">⏰ Предложить другое время</h3>
+            <p className="text-sm text-[rgba(15,23,42,0.62)] mt-1.5 mb-6">Инициатор встречи получит уведомление</p>
+            <div className="space-y-5">
               <div>
-                <label htmlFor="reschedule-date" className="block text-sm font-bold text-[var(--text)] mb-1.5">Дата и время</label>
+                <label htmlFor="reschedule-date" className="block text-sm font-semibold text-[#0F172A] mb-2">Дата и время</label>
                 <input id="reschedule-date" type="datetime-local"
                   value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)}
                   min={new Date().toISOString().slice(0, 16)}
-                  className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--text)] bg-[var(--surface)]" />
+                  className="rk-modal-input" />
               </div>
               <div>
-                <p className="text-sm font-bold text-[var(--text)] mb-2" id="reschedule-format-label">Формат</p>
-                <div className="grid grid-cols-2 gap-3" role="group" aria-labelledby="reschedule-format-label">
+                <p className="text-sm font-semibold text-[#0F172A] mb-2" id="reschedule-format-label">Формат</p>
+                <div className="grid grid-cols-2 gap-2.5" role="group" aria-labelledby="reschedule-format-label">
                   {(['online', 'offline'] as const).map((fmt) => (
                     <button key={fmt} type="button" aria-pressed={rescheduleFormat === fmt} onClick={() => setRescheduleFormat(fmt)}
-                      className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-bold transition-all ${
+                      className={`flex items-center justify-center gap-2 py-3 rounded-[14px] border-2 text-sm font-semibold transition-all ${
                         rescheduleFormat === fmt
-                          ? 'border-[var(--text)] bg-[var(--accent)] text-[var(--text)]'
-                          : 'border-[var(--border)] text-[var(--text-2)] hover:border-[var(--text)]'
+                          ? 'border-[rgba(15,23,42,0.55)] bg-[rgba(15,23,42,0.06)] text-[#0F172A]'
+                          : 'border-[rgba(15,23,42,0.10)] text-[rgba(15,23,42,0.55)] hover:border-[rgba(15,23,42,0.25)]'
                       }`}>
-                      {fmt === 'online' ? <><Wifi size={16} /> Онлайн</> : <><MapPin size={16} /> Оффлайн</>}
+                      {fmt === 'online' ? <><Wifi size={15} /> Онлайн</> : <><MapPin size={15} /> Оффлайн</>}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label htmlFor="reschedule-comment" className="block text-sm font-bold text-[var(--text)] mb-1.5">
-                  Комментарий <span className="text-[var(--text-3)] font-normal">(необязательно)</span>
+                <label htmlFor="reschedule-comment" className="block text-sm font-semibold text-[#0F172A] mb-2">
+                  Комментарий <span className="text-[rgba(15,23,42,0.40)] font-normal">(необязательно)</span>
                 </label>
                 <input id="reschedule-comment" type="text"
                   value={rescheduleComment} onChange={(e) => setRescheduleComment(e.target.value)}
                   placeholder="Почему предлагаешь другое время?"
-                  className="w-full px-4 py-2.5 border border-[var(--border)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--text)] bg-[var(--surface)]" />
+                  className="rk-modal-input" />
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-7">
               <button onClick={() => setShowReschedule(false)}
-                className="flex-1 py-2.5 border border-[var(--border)] text-[var(--text-2)] rounded-xl text-sm hover:bg-[var(--surface-2)] transition-colors">
+                className="rk-modal-btn-secondary flex-1 py-3 rounded-[14px] text-sm font-medium">
                 Отмена
               </button>
               <button onClick={requestReschedule} disabled={!rescheduleDate || meetingLoading}
-                className="flex-1 py-2.5 bg-[var(--accent)] text-[var(--text)] rounded-xl text-sm font-bold disabled:opacity-40 hover:bg-[var(--accent-dark)] transition-colors">
+                className="rk-modal-btn-primary flex-1 py-3 rounded-[14px] text-sm">
                 {meetingLoading ? 'Отправляем…' : 'Предложить'}
               </button>
             </div>
@@ -954,46 +975,54 @@ export default function MatchClient({ myProfile, matches, searchersCount = 0, em
 
       {/* ── Rating modal ── */}
       {showRating && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 rk-overlay flex items-end sm:items-center justify-center z-50 sm:p-4"
           role="dialog" aria-modal="true" aria-labelledby="rating-title"
           onClick={() => setShowRating(false)}>
-          <div className="bg-[var(--surface)] rounded-3xl w-full max-w-sm p-6 shadow-2xl rk-pop-in"
+          <div className="rk-modal w-full sm:max-w-sm p-6 sm:p-7"
             onClick={(e) => e.stopPropagation()}>
-            <div className="text-center mb-5">
-              <div className="text-4xl mb-2">☕</div>
-              <h3 id="rating-title" className="font-black text-xl text-[var(--text)] mb-1">Как прошло?</h3>
-              <p className="text-sm text-[var(--text-2)]">Это улучшит подбор следующей пары</p>
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-3">☕</div>
+              <h3 id="rating-title" className="font-black text-xl">Как прошло?</h3>
+              <p className="text-sm text-[rgba(15,23,42,0.62)] mt-1.5">Это улучшит подбор следующей пары</p>
             </div>
-            <div className="flex justify-center gap-1 mb-5" role="group" aria-label="Оценка встречи">
+            <div className="flex justify-center gap-1 mb-6" role="group" aria-label="Оценка встречи">
               {[1,2,3,4,5].map((star) => (
                 <button key={star} onClick={() => setRating(star)}
                   aria-label={`${star} из 5`} aria-pressed={star <= rating}
                   className="transition-transform hover:scale-110 active:scale-95">
                   <Star size={38}
-                    className={star <= rating ? 'text-amber-400' : 'text-[var(--surface-2)]'}
+                    className={star <= rating ? 'text-amber-400' : 'text-[rgba(15,23,42,0.15)]'}
                     fill={star <= rating ? 'currentColor' : 'none'}
                     strokeWidth={1.5} />
                 </button>
               ))}
             </div>
-            <p className="text-sm font-bold text-[var(--text)] text-center mb-3">Хочешь ещё встретиться с этим человеком?</p>
-            <div className="grid grid-cols-2 gap-3" role="group" aria-label="Повторная встреча">
+            <p className="text-sm font-semibold text-[#0F172A] text-center mb-3">Хочешь ещё встретиться с этим человеком?</p>
+            <div className="grid grid-cols-2 gap-2.5" role="group" aria-label="Повторная встреча">
               <button onClick={() => setWantAgain(true)} aria-pressed={wantAgain === true}
-                className={`py-3 rounded-xl border-2 text-sm font-bold transition-all ${wantAgain === true ? 'border-green-600 bg-green-950/30 text-green-400' : 'border-[var(--border)] text-[var(--text-2)] hover:border-green-600'}`}>
+                className={`py-3 rounded-[14px] border-2 text-sm font-semibold transition-all ${
+                  wantAgain === true
+                    ? 'border-green-500 bg-green-50 text-green-700'
+                    : 'border-[rgba(15,23,42,0.10)] text-[rgba(15,23,42,0.55)] hover:border-green-400'
+                }`}>
                 👍 Да, хочу
               </button>
               <button onClick={() => setWantAgain(false)} aria-pressed={wantAgain === false}
-                className={`py-3 rounded-xl border-2 text-sm font-bold transition-all ${wantAgain === false ? 'border-[var(--text-3)] bg-[var(--surface-2)] text-[var(--text-2)]' : 'border-[var(--border)] text-[var(--text-2)] hover:border-[var(--text-3)]'}`}>
+                className={`py-3 rounded-[14px] border-2 text-sm font-semibold transition-all ${
+                  wantAgain === false
+                    ? 'border-[rgba(15,23,42,0.22)] bg-[rgba(15,23,42,0.05)] text-[rgba(15,23,42,0.55)]'
+                    : 'border-[rgba(15,23,42,0.10)] text-[rgba(15,23,42,0.55)] hover:border-[rgba(15,23,42,0.22)]'
+                }`}>
                 🔄 Другого
               </button>
             </div>
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-7">
               <button onClick={() => setShowRating(false)}
-                className="flex-1 py-2.5 border border-[var(--border)] text-[var(--text-2)] rounded-xl text-sm hover:bg-[var(--surface-2)] transition-colors">
+                className="rk-modal-btn-secondary flex-1 py-3 rounded-[14px] text-sm font-medium">
                 Позже
               </button>
               <button onClick={submitRating} disabled={rating === 0 || wantAgain === null || ratingLoading}
-                className="flex-1 py-2.5 bg-[var(--text)] text-white rounded-xl text-sm font-bold disabled:opacity-40 hover:opacity-80 transition-opacity">
+                className="rk-modal-btn-primary flex-1 py-3 rounded-[14px] text-sm">
                 {ratingLoading ? 'Сохраняем…' : 'Сохранить'}
               </button>
             </div>

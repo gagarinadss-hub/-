@@ -1,6 +1,12 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+
+export const metadata: Metadata = {
+  title: 'Мой профиль',
+  description: 'Редактируй своё имя, интересы и цели для лучших совпадений.',
+}
 import type { Profile } from '@/lib/types'
 import ProfileForm from './ProfileForm'
 
@@ -21,7 +27,7 @@ export default async function ProfilePage() {
           <span className="text-xl">👤</span>
         </div>
         <div>
-          <h1 className="text-2xl font-black text-[var(--text)]">
+          <h1 className="text-[28px] font-bold text-[var(--text)] tracking-tight">
             {profile ? 'Мой профиль' : 'Создать карточку'}
           </h1>
           <p className="text-sm text-[var(--text-2)]">

@@ -147,7 +147,7 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
   // ── IDLE ────────────────────────────────────────────
   if (state === 'idle') {
     return (
-      <div className="bg-[var(--surface)] rounded-2xl border-2 border-dashed border-[var(--border)] p-8 text-center">
+      <div className="glass rounded-2xl border-2 border-dashed border-white/25 p-8 text-center">
         <div className="w-14 h-14 bg-[var(--accent)] rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Shuffle size={22} className="text-[var(--text)]" />
         </div>
@@ -169,18 +169,18 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
   // ── SEARCHING ───────────────────────────────────────
   if (state === 'searching') {
     return (
-      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6">
+      <div className="glass rounded-2xl p-6">
         <div className="flex flex-col items-center gap-4">
-          <div className="border-4 border-[#C8A27C] border-t-[#F0EDE8] rounded-full w-12 h-12 animate-spin" />
+          <div className="border-4 border-[var(--text-3)] border-t-[var(--text)] rounded-full w-12 h-12 animate-spin" />
           <p
-            className="font-bold text-[#0F0F0F] text-sm text-center transition-opacity duration-200"
+            className="font-bold text-[var(--text)] text-sm text-center transition-opacity duration-200"
             style={{ opacity: textVisible ? 1 : 0 }}
           >
             {SEARCH_TEXTS[textIndex]}
           </p>
-          <div className="w-full bg-[var(--surface-2)] rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-[var(--text-3)] rounded-full h-1.5 overflow-hidden" style={{ opacity: 0.3 }}>
             <div
-              className="h-full bg-[#C8A27C] rounded-full transition-all duration-100"
+              className="h-full bg-[var(--text)] rounded-full transition-all duration-100"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -192,7 +192,7 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
   // ── NOT FOUND ───────────────────────────────────────
   if (state === 'notFound') {
     return (
-      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6 text-center">
+      <div className="glass rounded-2xl p-6 text-center">
         <p className="text-2xl mb-2">🔍</p>
         <p className="font-bold text-[var(--text)] text-base mb-1">Нет участников</p>
         <p className="text-sm text-[var(--text-2)] mb-4">
@@ -211,7 +211,7 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
   // ── ERROR ───────────────────────────────────────────
   if (state === 'error') {
     return (
-      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6 text-center">
+      <div className="glass rounded-2xl p-6 text-center">
         <p className="text-2xl mb-2">⚠️</p>
         <p className="font-bold text-[var(--text)] text-base mb-1">Что-то пошло не так</p>
         <p className="text-sm text-[var(--text-2)] mb-4">Произошла ошибка. Попробуй ещё раз.</p>
@@ -229,15 +229,15 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
   if (state === 'found' && result && result.profile) {
     const p = result.profile
     const { score, commonInterests, commonGoals } = result
-    const scoreColor = score > 85 ? '#22c55e' : score > 70 ? '#f59e0b' : '#6b7280'
+    const scoreColor = score > 85 ? '#86efac' : score > 70 ? '#fde68a' : 'rgba(255,255,255,0.50)'
     const displayInterests = commonInterests.slice(0, 4)
     const displayGoals = commonGoals.slice(0, 4)
 
     return (
-      <div className="bg-[var(--surface)] rounded-2xl border-2 border-[#C8A27C] p-5 shadow-sm">
+      <div className="glass rounded-2xl border border-white/35 p-5">
         {/* Badge */}
         <div className="flex justify-end mb-3">
-          <span className="text-xs font-bold bg-[#C8A27C] text-[#0F0F0F] px-2.5 py-1 rounded-full">
+          <span className="text-xs font-semibold bg-white/45 text-[var(--text-2)] px-2.5 py-1 rounded-full">
             ✨ Мэтч найден
           </span>
         </div>
@@ -250,9 +250,9 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
               <span style={{ color: scoreColor }}>{score}%</span> совпадение
             </span>
           </div>
-          <div className="w-full bg-[var(--surface-2)] rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-white/20 rounded-full h-1.5 overflow-hidden">
             <div
-              className="h-full bg-[#C8A27C] rounded-full"
+              className="h-full bg-white/70 rounded-full"
               style={{ width: `${score}%` }}
             />
           </div>
@@ -261,7 +261,7 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
         {/* Profile */}
         <div className="flex items-start gap-3 mb-4">
           <div
-            className="shrink-0 rounded-full bg-[#C8A27C] flex items-center justify-center font-black text-[#0F0F0F] text-sm"
+            className="shrink-0 rounded-full bg-white/40 flex items-center justify-center font-black text-[var(--text)] text-sm"
             style={{ width: 52, height: 52 }}
           >
             {getInitials(p.full_name ?? '?')}
@@ -288,7 +288,7 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
               {displayInterests.map((interest) => (
                 <span
                   key={interest}
-                  className="text-xs px-2.5 py-1 bg-[#C8A27C] text-[#0F0F0F] rounded-full font-semibold"
+                  className="rk-tag"
                 >
                   {interest}
                 </span>
@@ -305,7 +305,7 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
               {displayGoals.map((goal) => (
                 <span
                   key={goal}
-                  className="text-xs px-2.5 py-1 bg-[var(--accent)] text-[#0F0F0F] rounded-full font-semibold"
+                  className="text-xs px-2.5 py-1 bg-[var(--accent)] text-white rounded-full font-semibold"
                 >
                   {goal}
                 </span>
@@ -319,7 +319,7 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
           <button
             onClick={handleScheduleMeeting}
             disabled={matchLoading}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[var(--accent)] text-[#0F0F0F] rounded-xl text-sm font-bold hover:opacity-80 transition-opacity disabled:opacity-60"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold glow-btn"
           >
             {matchLoading ? (
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -330,7 +330,7 @@ export default function FindPairWidget({ myProfileId, myInterests }: Props) {
           </button>
           <button
             onClick={handleFindAnother}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-[var(--border)] text-[var(--text)] rounded-xl text-sm font-bold hover:bg-[var(--surface-2)] transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 glass-sm text-[var(--text)] rounded-xl text-sm font-bold hover:bg-white/35"
           >
             <Sparkles size={14} /> Найти другого →
           </button>

@@ -1,6 +1,12 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+
+export const metadata: Metadata = {
+  title: 'История встреч',
+  description: 'Все завершённые знакомства и отзывы о встречах.',
+}
 import type { Profile, Meeting, MeetingFeedback } from '@/lib/types'
 import { Avatar } from '@/components/ProfileCard'
 import Link from 'next/link'
@@ -79,7 +85,7 @@ export default async function HistoryPage() {
           <Clock size={20} className="text-[var(--text)]" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-[var(--text)]">История встреч</h1>
+          <h1 className="text-[28px] font-bold text-[var(--text)] tracking-tight">История встреч</h1>
           <p className="text-sm text-[var(--text-2)]">
             {meetings.length > 0
               ? `${meetings.length} ${meetings.length === 1 ? 'встреча' : meetings.length < 5 ? 'встречи' : 'встреч'} проведено`
@@ -89,7 +95,7 @@ export default async function HistoryPage() {
       </div>
 
       {meetings.length === 0 ? (
-        <div className="rk-fade-up-1 bg-[var(--surface)] rounded-2xl border-2 border-dashed border-[var(--border)] p-12 text-center">
+        <div className="rk-fade-up-1 glass rounded-2xl border-2 border-dashed border-white/25 p-12 text-center">
           <div className="w-16 h-16 bg-[var(--accent)] rounded-2xl flex items-center justify-center mx-auto mb-5">
             <Coffee size={28} className="text-[var(--text)]" />
           </div>
@@ -113,7 +119,7 @@ export default async function HistoryPage() {
             return (
               <div
                 key={meeting.id}
-                className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 shadow-[var(--shadow)] rk-card rk-fade-up"
+                className="glass rounded-2xl p-5 rk-card rk-fade-up"
                 style={{ animationDelay: `${idx * 0.05}s` }}
               >
                 {/* Partner info */}
@@ -154,7 +160,7 @@ export default async function HistoryPage() {
                     </span>
                   )}
                   {meeting.status === 'completed' && (
-                    <span className="text-xs px-3 py-1 rounded-full bg-green-950/30 text-green-400 font-semibold border border-green-800/40">
+                    <span className="text-xs px-3 py-1 rounded-full bg-green-100/80 text-green-700 font-semibold border border-green-200/60">
                       ✅ Состоялась
                     </span>
                   )}
@@ -166,8 +172,8 @@ export default async function HistoryPage() {
                   {feedback?.want_again !== undefined && feedback?.want_again !== null && (
                     <span className={`text-xs px-3 py-1 rounded-full font-semibold border ${
                       feedback.want_again
-                        ? 'bg-green-950/30 text-green-400 border-green-800/40'
-                        : 'bg-[var(--surface-2)] text-[var(--text-3)] border-[var(--border)]'
+                        ? 'bg-green-500/20 text-green-100 border-green-400/30'
+                        : 'bg-white/20 text-[var(--text-3)] border-[var(--border)]'
                     }`}>
                       {feedback.want_again ? '👍 Хочет встретиться снова' : '🔄 Попробует с другим'}
                     </span>
