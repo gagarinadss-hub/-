@@ -60,7 +60,7 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
   return (
     <>
       {/* ── Desktop: left sidebar ─────────────────────────────────────────── */}
-      <aside aria-label="Боковая навигация" className="rk-sidebar hidden lg:flex flex-col fixed left-0 top-0 bottom-0 glass border-r z-40 overflow-y-auto overflow-x-hidden" style={{ borderColor: 'rgba(255,255,255,0.20)', boxShadow: '1px 0 0 rgba(255,255,255,0.12), 4px 0 32px rgba(0,0,0,0.12)' }}>
+      <aside aria-label="Боковая навигация" className="rk-sidebar hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-40 overflow-y-auto overflow-x-hidden" style={{ background: 'rgba(255,255,255,0.58)', backdropFilter: 'blur(28px) saturate(1.8)', WebkitBackdropFilter: 'blur(28px) saturate(1.8)', borderRight: '1px solid rgba(255,255,255,0.40)', boxShadow: '4px 0 32px rgba(139,92,246,0.08)' }}>
 
         {/* Logo */}
         <div className="px-4 pt-5 pb-4">
@@ -102,9 +102,15 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
             return (
               <Link key={href} href={href}
                 aria-current={active ? 'page' : undefined}
+                style={active ? {
+                  background: 'rgba(196,181,253,0.32)',
+                  color: '#1e1b4b',
+                  fontWeight: 600,
+                  boxShadow: '0 2px 8px rgba(139,92,246,0.12)',
+                } : {}}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 min-h-[44px] ${
                   active
-                    ? 'bg-white/40 text-[var(--text)] font-semibold shadow-sm'
+                    ? ''
                     : 'text-[var(--text-2)] hover:bg-white/25 hover:text-[var(--text)]'
                 }`}
               >
@@ -124,9 +130,15 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
 
           {/* Notifications */}
           <Link href="/notifications"
+            style={pathname === '/notifications' ? {
+              background: 'rgba(196,181,253,0.32)',
+              color: '#1e1b4b',
+              fontWeight: 600,
+              boxShadow: '0 2px 8px rgba(139,92,246,0.12)',
+            } : {}}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 min-h-[44px] ${
               pathname === '/notifications'
-                ? 'bg-white/40 text-[var(--text)] font-semibold shadow-sm'
+                ? ''
                 : 'text-[var(--text-2)] hover:bg-white/25 hover:text-[var(--text)]'
             }`}
           >
@@ -146,9 +158,15 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
             <>
               <div className="my-2 mx-1 h-px bg-[var(--border)]" />
               <Link href="/admin"
+                style={isActive('/admin') ? {
+                  background: 'rgba(196,181,253,0.32)',
+                  color: '#1e1b4b',
+                  fontWeight: 600,
+                  boxShadow: '0 2px 8px rgba(139,92,246,0.12)',
+                } : {}}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 min-h-[44px] ${
                   isActive('/admin')
-                    ? 'bg-white/40 text-[var(--text)] font-semibold shadow-sm'
+                    ? ''
                     : 'text-[var(--text-2)] hover:bg-white/25 hover:text-[var(--text)]'
                 }`}
               >
@@ -171,7 +189,8 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
       </aside>
 
       {/* ── Mobile: bottom bar ────────────────────────────────────────────── */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 glass border-t z-40 safe-area-bottom" aria-label="Основная навигация">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 safe-area-bottom" aria-label="Основная навигация"
+        style={{ background: 'rgba(255,255,255,0.68)', backdropFilter: 'blur(24px) saturate(1.8)', WebkitBackdropFilter: 'blur(24px) saturate(1.8)', borderTop: '1px solid rgba(255,255,255,0.45)', boxShadow: '0 -4px 24px rgba(139,92,246,0.08)' }}>
         <div className="flex items-center justify-around px-1 pt-1.5 pb-1.5">
           {[
             { href: '/dashboard',     label: 'Главная',  icon: Home,          badge: 0 },
@@ -187,9 +206,8 @@ export default function Navbar({ isAdmin = false, userName, userAvatar }: Navbar
                   active ? 'text-[var(--text)]' : 'text-[var(--text-2)]'
                 }`}
               >
-                <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                  active ? 'bg-white/40 scale-110' : ''
-                }`}>
+                <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all`}
+                  style={active ? { background: 'rgba(196,181,253,0.45)', transform: 'scale(1.1)', boxShadow: '0 2px 8px rgba(139,92,246,0.16)' } : {}}>
                   <Icon size={18} />
                   <Badge count={badge} />
                 </div>
