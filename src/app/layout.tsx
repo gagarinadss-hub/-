@@ -27,20 +27,20 @@ export const metadata: Metadata = {
     siteName: 'Random Coffee',
     title: 'Random Coffee — умные встречи из сообщества',
     description: 'Находи полезных собеседников. 30 минут — новый человек в жизни.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Random Coffee' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Random Coffee — умные встречи из сообщества' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Random Coffee',
     description: 'Умные случайные встречи из сообщества',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   icons: { icon: '/favicon.ico', apple: '/apple-touch-icon.png' },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#fda085',
+  themeColor: '#a78bfa',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
