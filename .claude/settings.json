@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone https://github.com/calesthio/OpenMontage*)",
+      "Bash(make setup)",
+      "Bash(make install)",
+      "Bash(make install-dev)",
+      "Bash(make venv)",
+      "Bash(make preflight)",
+      "Bash(make hyperframes-warm)",
+      "Bash(python3 -m venv *)",
+      "Bash(python -m venv *)",
+      "Bash(pip install *)",
+      "Bash(python -m pip install *)",
+      "Bash(.venv/bin/python -m pip install *)",
+      "Bash(npm install)",
+      "Bash(npm ci)",
+      "Bash(npx --yes hyperframes *)"
+    ]
+  }
+}
